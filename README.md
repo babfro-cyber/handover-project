@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Transmission des savoirs
 
-## Getting Started
+Prototype Next.js pour capter le savoir-faire d’une personne-clé, puis relire le dossier côté manager.
 
-First, run the development server:
+## Lancer en local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrir [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Commandes utiles :
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run test
+npm run build
+```
 
-## Learn More
+## Déployer rapidement sur Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Pousser le dépôt sur GitHub.
+2. Aller sur [vercel.com/new](https://vercel.com/new).
+3. Importer le dépôt.
+4. Garder la configuration détectée par défaut pour Next.js.
+5. Lancer le déploiement.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Variable d’environnement requise : aucune.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Hypothèses de démo
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Les données de démonstration restent en `localStorage`.
+- Au premier accès à l’espace manager, un exemple seedé est créé automatiquement si le navigateur n’a encore aucune donnée.
+- Les entretiens, les dossiers et la personne sélectionnée côté manager restent propres après rafraîchissement tant que le navigateur conserve son `localStorage`.
+- Comme il n’y a pas de backend, chaque navigateur garde sa propre copie de la démo.
