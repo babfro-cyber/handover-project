@@ -36,11 +36,11 @@ export function InterviewExperience() {
   const { dictionary, language } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const shouldStartNew = searchParams.get("new") === "1";
   const [session, setSession] = useState<InterviewSession | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const shouldStartNew = searchParams.get("new") === "1";
     const storedSession = shouldStartNew ? null : loadSession();
 
     if (shouldStartNew && loadActiveSessionId()) {
@@ -51,7 +51,7 @@ export function InterviewExperience() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSession(storedSession ?? null);
     setHydrated(true);
-  }, [searchParams]);
+  }, [shouldStartNew]);
 
   useEffect(() => {
     const resolvedSession =

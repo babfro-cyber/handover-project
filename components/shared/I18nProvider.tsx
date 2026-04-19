@@ -27,18 +27,32 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
+  const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
+
+  useEffect(() => {
     if (typeof window === "undefined") {
-      return DEFAULT_LANGUAGE;
+      return;
     }
 
     const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    return stored === "fr" || stored === "en" ? stored : DEFAULT_LANGUAGE;
-  });
+    if (stored === "fr" || stored === "en") {
+      const timeoutId = window.setTimeout(() => {
+        setLanguage((current) => (current === stored ? current : stored));
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
+    }
+  }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
     window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-    document.documentElement.lang = language;
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = language;
+    }
   }, [language]);
 
   const value = useMemo(

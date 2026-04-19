@@ -1,4 +1,5 @@
 import { Language } from "@/lib/i18n";
+import { createId } from "@/lib/id";
 import {
   analyseAnswer,
   extractContacts,
@@ -670,7 +671,7 @@ function buildOpenQuestions(
   for (const tool of tools) {
     if (tool.whereItLives === copy.missingLocation) {
       questions.push({
-        id: crypto.randomUUID(),
+        id: createId(),
         prompt: copy.gapToolPrompt(tool.name),
         reason: copy.gapToolReason,
         relatedSectionId: "tools-files",
@@ -683,7 +684,7 @@ function buildOpenQuestions(
   for (const responsibility of responsibilities) {
     if (responsibility.trigger === copy.missingTrigger) {
       questions.push({
-        id: crypto.randomUUID(),
+        id: createId(),
         prompt: copy.gapTriggerPrompt(responsibility.title),
         reason: copy.gapTriggerReason,
         relatedSectionId: "step-by-step-tasks",
@@ -694,7 +695,7 @@ function buildOpenQuestions(
 
     if (responsibility.checks[0] === copy.missingChecks) {
       questions.push({
-        id: crypto.randomUUID(),
+        id: createId(),
         prompt: copy.gapChecksPrompt(responsibility.title),
         reason: copy.gapChecksReason,
         relatedSectionId: "step-by-step-tasks",
@@ -710,7 +711,7 @@ function buildOpenQuestions(
       )
     ) {
       questions.push({
-        id: crypto.randomUUID(),
+        id: createId(),
         prompt:
           language === "fr"
             ? "Préciser à partir de quel niveau d’incertitude prix ou délai il faut stopper et demander validation dirigeant."
@@ -732,7 +733,7 @@ function buildOpenQuestions(
   for (const issue of issues) {
     if (issue.firstChecks[0] === copy.missingFirstChecks) {
       questions.push({
-        id: crypto.randomUUID(),
+        id: createId(),
         prompt: copy.gapIssuePrompt(issue.issue),
         reason: copy.gapIssueReason,
         relatedSectionId: "problem-solving",
@@ -745,7 +746,7 @@ function buildOpenQuestions(
   const wrapUpMessages = messagesForSection(getUserMessages(session), ["wrap-up"]);
   if (wrapUpMessages.length === 0) {
     questions.push({
-      id: crypto.randomUUID(),
+      id: createId(),
       prompt: copy.gapWrapPrompt,
       reason: copy.gapWrapReason,
       relatedSectionId: "wrap-up",
@@ -765,7 +766,7 @@ function buildOpenQuestions(
       )
   ) {
     questions.push({
-      id: crypto.randomUUID(),
+      id: createId(),
       prompt:
         language === "fr"
           ? "Formaliser les critères qui font passer une urgence devant le planning déjà engagé."
@@ -838,7 +839,7 @@ export function buildSessionSummary(session: InterviewSession): SessionSummary {
     gaps.length * 5;
 
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     sessionId: session.id,
     mainRole,
     detectedResponsibilities: responsibilities,

@@ -1,4 +1,5 @@
 import { DEFAULT_LANGUAGE, Language } from "@/lib/i18n";
+import { createId } from "@/lib/id";
 import {
   detectSignals,
   analyseAnswer,
@@ -29,7 +30,7 @@ function createMessage(
   detectedSignals: SignalTag[] = [],
 ): InterviewMessage {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     role,
     content,
     createdAt,
@@ -211,7 +212,7 @@ function buildSession(
   }
 
   return {
-    id: overrides?.id ?? crypto.randomUUID(),
+    id: overrides?.id ?? createId(),
     language,
     firstName: overrides?.firstName ?? "",
     lastName: overrides?.lastName ?? "",

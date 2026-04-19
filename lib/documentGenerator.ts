@@ -1,4 +1,5 @@
 import { DEFAULT_LANGUAGE, Language } from "@/lib/i18n";
+import { createId } from "@/lib/id";
 import { getCompletenessStatus } from "@/lib/interviewHeuristics";
 import { buildSessionSummary } from "@/lib/sessionSummary";
 import {
@@ -453,7 +454,7 @@ export function generateDocument(
   const copy = getDocumentCopy(language);
 
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     sessionId: session.id,
     language,
     title: copy.title,
