@@ -11,23 +11,33 @@ npm run dev
 
 Ouvrir [http://localhost:3000](http://localhost:3000).
 
-Commandes utiles :
+## Générer l’export statique
+
+```bash
+npm run build
+```
+
+Le build statique est écrit dans le dossier `out/`.
+
+## Prévisualiser l’export statique
+
+```bash
+npm run preview:static
+```
+
+## Déployer sur un hébergement statique
+
+Servez le contenu du dossier `out/` sur votre hébergeur statique.
+
+Variable d’environnement requise : aucune.
+
+## Vérification
 
 ```bash
 npm run lint
 npm run test
 npm run build
 ```
-
-## Déployer rapidement sur Vercel
-
-1. Pousser le dépôt sur GitHub.
-2. Aller sur [vercel.com/new](https://vercel.com/new).
-3. Importer le dépôt.
-4. Garder la configuration détectée par défaut pour Next.js.
-5. Lancer le déploiement.
-
-Variable d’environnement requise : aucune.
 
 ## Hypothèses de démo
 
