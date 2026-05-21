@@ -4,15 +4,25 @@
     activeSessionId: "knowledge-capture.static.active-session",
     sessions: "knowledge-capture.static.sessions",
     documents: "knowledge-capture.static.documents",
+    demoVersion: "knowledge-capture.static.demo-version",
   };
 
+  const DEMO_VERSION = "cockpit-v9";
+
   const SECTION_ORDER = [
-    "role-overview",
-    "recurring-responsibilities",
-    "step-by-step-tasks",
-    "problem-solving",
-    "tools-files-contacts",
-    "wrap-up",
+    "drilled-block-design",
+    "schematics-client-need",
+    "material-choices",
+    "pressure-safety",
+    "surface-treatments",
+    "hydraulic-components",
+    "leak-diagnosis",
+    "troubleshooting-order",
+    "machining-feasibility",
+    "frequent-errors",
+    "weak-signals",
+    "customer-cases",
+    "experience-transfer",
   ];
 
   const routeLabels = {
@@ -23,115 +33,197 @@
 
   const dictionaries = {
     fr: {
-      appName: "Transmission des savoirs",
-      landingEyebrow: "Prototype",
-      landingTitle: "Capturer le savoir opérationnel des personnes-clés",
+      appName: "NumerHyd",
+      landingEyebrow: "Démo UX",
+      landingTitle: "NumerHyd — Capture d’expertise hydraulique",
       landingSubtitle:
-        "Un espace entretien pour la personne interrogée, puis un espace manager pour revoir et structurer ce savoir-faire.",
-      interviewSurface: "Poser les bonnes questions et capter les réponses sans friction.",
-      managerSurface: "Suivre les personnes interrogées et ouvrir leur dossier.",
-      startInterview: "Commencer un entretien",
-      openManager: "Accéder à l’espace manager",
+        "Un dictaphone métier qui aide un expert senior à transmettre ses diagnostics, ses réflexes terrain et ses cas clients.",
+      interviewSurface: "Une question à la fois, une réponse orale, une transcription corrigible.",
+      managerSurface: "Créer un entretien technique, suivre la progression et relire les fiches d’expertise.",
+      startInterview: "Commencer un entretien technique",
+      openManager: "Accéder au pilotage NumerHyd",
+      interviewLinkHint: "Lien de démonstration discret pour vérifier le parcours cédant.",
+      manualInterview: "Prévisualiser le parcours expert",
       backHome: "Retour à l’accueil",
       languageFr: "Français",
       languageEn: "English",
-      interviewArea: "Espace entretien",
-      managerArea: "Espace manager",
-      captureNote: "Les réponses sont enregistrées au fil de l’entretien.",
+      interviewArea: "Entretien technique",
+      managerArea: "Pilotage NumerHyd",
+      captureNote: "Vous pouvez faire cet entretien en plusieurs fois. Vos réponses sont sauvegardées automatiquement.",
+      resumeNotice: "Vous reprenez là où vous vous étiez arrêté.",
+      expertIntroTitle: "Entretien de transmission technique",
+      expertIntroBody:
+        "Cet entretien sert à transmettre votre expertise technique. Vous pouvez parler naturellement, corriger le texte si besoin, faire une pause à tout moment et reprendre plus tard.",
+      expertIntroReassurance: "Il n’est pas nécessaire de tout faire en une seule fois.",
+      startExpertInterview: "Commencer l’entretien",
+      resumeExpertInterview: "Reprendre l’entretien",
+      pauseSavedTitle: "Vos réponses ont été sauvegardées.",
+      pauseSavedBody: "Vous pourrez reprendre cet entretien plus tard avec le même lien.",
+      resumeNow: "Reprendre maintenant",
+      questionCount: "Question",
+      themeLabel: "Thème",
+      micRecording: "Enregistrement en cours…",
+      micStopped: "Arrêté",
+      managerLinkHelp: "Envoyez ce lien au cédant. Il arrivera directement dans son entretien, sans passer par l’espace NumerHyd.",
+      testExpertPath: "Prévisualiser le parcours expert",
+      viewExpertiseSheets: "Voir la synthèse",
+      subject: "Sujet",
+      expertName: "Nom de la personne interviewée",
+      createInterview: "Créer un entretien",
+      createInterviewTitle: "Nouvel entretien",
+      expertiseSubject: "Sujet / expertise",
+      profileLabel: "Rôle / profil",
+      profileSeller: "Cédant / dirigeant",
+      profileWorkshop: "Chef d’atelier",
+      profileOther: "Autre",
+      topicsLabel: "Sujets à aborder",
+      allTopics: "Tous les thèmes",
+      selectedTopics: "thèmes sélectionnés",
+      optionalContext: "Contexte optionnel",
+      optionalContextPlaceholder: "Exemple : départ à la retraite, domaine prioritaire, points à couvrir...",
+      createAndShowLink: "Créer et afficher le lien",
+      createdLinkTitle: "Lien prêt à envoyer",
+      createdLinkHelp: "Envoyez ce lien à la personne concernée. Elle arrivera directement dans son entretien.",
+      cancel: "Annuler",
+      answeredQuestions: "questions répondues",
+      topicsCovered: "thèmes abordés",
+      topicsRemaining: "thèmes restants",
+      totalTime: "temps total passé",
+      sessionsCount: "sessions",
+      expertiseSheetsArea: "Fiches d’expertise technique",
+      expertiseSheetsIntro: "Consultez les connaissances capturées, organisées par thème.",
+      learned: "Ce qu’on a appris",
+      qa: "Questions / réponses",
+      keyPoints: "Points clés",
+      sources: "Sources",
+      notCovered: "Ce thème n’a pas encore été abordé.",
+      statusPaused: "En pause",
+      statusPartial: "Partiellement transmis",
+      continueLater: "Continuer plus tard",
+      partialSubmitTitle: "Vous n’avez pas encore répondu à toutes les questions",
+      partialSubmitBody: "Vous pouvez continuer l’entretien plus tard, ou transmettre maintenant les réponses déjà enregistrées.",
+      submitPartial: "Transmettre mes réponses maintenant",
+      completedThanksTitle: "Merci, l’entretien est terminé.",
+      completedThanksBody: "Vos réponses ont été transmises. Gatien pourra les relire dans l’espace NumerHyd.",
+      partialThanksTitle: "Merci, vos réponses ont été transmises.",
+      partialThanksBody: "L’entretien est partiel, mais les réponses déjà enregistrées restent utiles et consultables.",
+      localDemoNotice: "Démo locale : la reprise fonctionne sur ce navigateur. Le lien multi-appareil viendra en Phase 2.",
       firstName: "Prénom",
       lastName: "Nom",
-      begin: "Commencer",
+      begin: "Démarrer l’entretien",
       currentQuestion: "Question en cours",
       yourAnswer: "Votre réponse",
-      answerPlaceholder: "Expliquez comme si vous formiez quelqu’un qui reprend le poste.",
+      answerPlaceholder: "Parlez naturellement. Vous pourrez corriger le texte avant de valider.",
       answerMode: "Mode de réponse",
-      typeResponse: "Répondre par écrit",
-      speakResponse: "Répondre à l’oral",
-      startMicrophone: "Activer le micro",
-      stopMicrophone: "Arrêter le micro",
+      typeResponse: "Écrire",
+      speakResponse: "Parler",
+      startMicrophone: "Démarrer le dictaphone",
+      stopMicrophone: "Arrêter le dictaphone",
       speechListening: "Écoute en cours",
-      speechStopped: "Micro arrêté",
+      speechStopped: "Dictaphone arrêté",
       speechUnavailable: "La saisie vocale n’est pas disponible dans ce navigateur.",
       speechDenied: "Accès au micro refusé. Vous pouvez continuer par écrit.",
       speechError: "La saisie vocale n’a pas pu démarrer. Vous pouvez continuer par écrit.",
-      speechHint: "Parlez puis relisez le texte avant d’envoyer.",
-      sendAnswer: "Envoyer",
-      submitHint: "Entrée pour envoyer. Maj + Entrée pour aller à la ligne.",
+      speechHint: "Parlez, puis corrigez la transcription si nécessaire avant de valider.",
+      sendAnswer: "Valider la réponse",
+      submitHint: "Le texte reste éditable si la transcription est imparfaite.",
       hintsTitle: "Repères utiles",
       latestResponse: "Dernière réponse",
       progress: "Avancement",
-      currentFocus: "Étape en cours",
+      currentFocus: "Thème en cours",
       nextStep: "Ensuite",
       reset: "Recommencer",
       finishInterview: "Terminer l’entretien",
-      noInterviewYet: "Aucun entretien en cours",
-      startTitle: "Commencer",
-      managerTitle: "Personnes interrogées",
-      managerSubtitle: "Suivi simple des entretiens et accès aux dossiers.",
-      people: "Personnes",
-      openFile: "Ouvrir le dossier",
+      pauseInterview: "Faire une pause",
+      interviewSteps: "Thèmes de l’entretien",
+      noInterviewYet: "Aucun entretien technique en cours",
+      startTitle: "Identifier l’expert",
+      managerTitle: "Entretiens techniques",
+      managerSubtitle: "Suivi simple des captures d’expertise et accès aux fiches générées.",
+      managerCreateLink: "Créer un entretien",
+      interviewLink: "Lien expert",
+      copyLink: "Copier le lien",
+      sendInvite: "Envoyer l’invitation",
+      invalidTokenTitle: "Lien invalide",
+      invalidTokenBody: "Ce lien d’entretien n’est pas reconnu ou n’est plus disponible sur cet appareil.",
+      people: "Fiches",
+      openFile: "Voir la synthèse",
       progressLabel: "Progression",
-      sectionsDone: "sections terminées",
-      lastUpdated: "Mis à jour",
-      statusDone: "terminé",
-      statusProgress: "en cours",
-      statusNotStarted: "non démarré",
-      interviewee: "Personne interrogée",
-      docTitle: "Dossier de savoir-faire",
-      docSubtitle: "Relire, compléter et affiner la documentation structurée.",
+      sectionsDone: "thèmes couverts",
+      lastUpdated: "Dernière activité",
+      statusDone: "Terminé",
+      statusProgress: "En cours",
+      statusNotStarted: "Non commencé",
+      interviewee: "Expert",
+      docTitle: "Fiches d’expertise technique",
+      docSubtitle: "Relire, corriger et transformer les réponses en capital technique exploitable.",
       backToDashboard: "Retour à la liste",
       exportPdf: "Exporter en PDF",
-      sessionSummary: "Résumé de session",
-      responsibilities: "Responsabilités",
-      issues: "Incidents",
-      tools: "Outils",
-      gaps: "Zones à préciser",
-      keyContacts: "Contacts clés",
-      noContacts: "Aucun contact clé n’a encore été repéré.",
-      editableDraft: "Texte modifiable",
+      sessionSummary: "Synthèse technique",
+      responsibilities: "Raisonnements",
+      issues: "Risques",
+      tools: "Contrôles",
+      gaps: "Questions ouvertes",
+      keyContacts: "Cas clients",
+      noContacts: "Aucun cas client précis n’a encore été repéré.",
+      editableDraft: "Fiche éditable",
       editableHelp:
-        "Vous pouvez ajuster ce brouillon directement. Les modifications restent enregistrées dans ce navigateur.",
+        "Vous pouvez ajuster cette fiche directement. Les modifications restent enregistrées dans ce navigateur.",
       demoLoaded: "Exemple chargé automatiquement",
       demoBody:
-        "Aucune donnée locale n’a été trouvée. Un exemple réaliste a été chargé pour montrer le rendu côté manager.",
+        "Aucune donnée locale n’a été trouvée. Un exemple NumerHyd a été chargé pour montrer le rendu côté pilotage.",
       openQuestions: "Questions ouvertes",
-      procedures: "Modes opératoires",
-      troubleshooting: "Gestion des incidents",
-      toolsFilesContacts: "Outils, fichiers et contacts",
-      roleOverview: "Vue d’ensemble du poste",
-      confidenceStrong: "solide",
-      confidencePartial: "partiel",
-      confidenceNeeds: "à préciser",
-      saveNotice: "Enregistré localement",
-      sectionRole: "rôle",
-      sectionTasks: "tâches",
-      sectionProcess: "process",
-      sectionProblems: "problèmes",
-      sectionTools: "outils",
-      sectionDecisions: "décisions",
-      qRole: "Commençons. Expliquez votre rôle comme si j’arrivais aujourd’hui dans l’entreprise.",
-      qRecurring:
-        "Quelles sont les responsabilités qui reviennent toutes les semaines ou presque ?",
-      qProcess:
-        "Prenons une tâche importante. Pouvez-vous me décrire comment vous la lancez puis comment vous la sécurisez ?",
-      qProblems:
-        "Quand quelque chose déraille dans l’atelier, quels sont les cas qui reviennent le plus souvent ?",
-      qTools:
-        "Sur quels outils, fichiers, dossiers partagés ou contacts vous appuyez-vous au quotidien ?",
-      qWrap:
-        "Si quelqu’un reprenait ce rôle demain, qu’est-ce qu’il devrait absolument comprendre dès le premier jour ?",
+      procedures: "Contrôles et vérifications",
+      troubleshooting: "Troubleshooting",
+      toolsFilesContacts: "Composants, machines et moyens",
+      roleOverview: "Synthèse par thème",
+      technicalReasoning: "Raisonnements techniques clés",
+      customerCases: "Cas clients mentionnés",
+      commonMistakes: "Erreurs fréquentes",
+      weakSignals: "Signaux faibles",
+      goodPractices: "Bonnes pratiques",
+      confidenceStrong: "renseigné",
+      confidencePartial: "réponse partielle",
+      confidenceNeeds: "à compléter",
+      saveNotice: "Sauvegardé localement",
+      savedAt: "Sauvegardé à",
+      sectionDrilledBlock: "Blocs forés",
+      sectionSchematics: "Schémas et besoin client",
+      sectionMaterials: "Matériaux",
+      sectionPressure: "Pression et sécurité",
+      sectionSurface: "Traitements de surface",
+      sectionComponents: "Composants hydrauliques",
+      sectionLeaks: "Diagnostic de fuites",
+      sectionTroubleshooting: "Ordre des vérifications",
+      sectionMachining: "Usinage et faisabilité",
+      sectionErrors: "Erreurs fréquentes",
+      sectionWeakSignals: "Signaux faibles",
+      sectionCases: "Cas clients",
+      sectionTransfer: "Transmission",
+      qDrilledBlock: "Quand vous démarrez la conception d’un bloc foré, par quoi commencez-vous ?",
+      qSchematics: "Quand vous lisez un schéma ou un besoin client, qu’est-ce que vous cherchez à comprendre en premier ?",
+      qMaterials: "Comment choisissez-vous le matériau d’un bloc ou d’un composant selon l’usage prévu ?",
+      qPressure: "Quels contrôles faites-vous pour sécuriser la pression, la résistance et les risques associés ?",
+      qSurface: "Dans quels cas recommandez-vous un traitement de surface, et qu’est-ce qui guide votre choix ?",
+      qComponents: "Comment choisissez-vous les composants hydrauliques à intégrer dans une solution ?",
+      qLeaks: "Quand un client vous dit que ça fuit, quelle est votre première réaction ?",
+      qTroubleshooting: "Dans quel ordre faites-vous vos vérifications quand le diagnostic n’est pas évident ?",
+      qMachining: "Comment évaluez-vous si une pièce ou un bloc est réellement usinable et industriellement faisable ?",
+      qErrors: "Qu’est-ce qu’un débutant aurait tendance à oublier ou à mal interpréter ici ?",
+      qWeakSignals: "Quels signes faibles vous mettent en alerte avant que le problème soit évident ?",
+      qCases: "Pouvez-vous raconter un cas client atypique qui vous a appris quelque chose d’important ?",
+      qTransfer: "Si vous deviez transmettre vos réflexes terrain à quelqu’un, que faudrait-il absolument lui faire comprendre ?",
       followShort: "Pouvez-vous donner plus de détail ou un exemple concret ?",
-      followAmbiguous: "Dans les cas les plus fréquents, qu’est-ce qui se passe vraiment ?",
-      followTask:
-        "Qu’est-ce qui déclenche cette tâche, quelles sont les étapes, puis quels contrôles vous faites avant de passer la main ?",
-      followProblem:
-        "Comment voyez-vous tout de suite que ça pose problème, et quel est votre premier contrôle ?",
-      followTools:
-        "Où est-ce exactement, et qui s’en sert ou en dépend au quotidien ?",
-      followAbstract: "Pouvez-vous raconter un cas réel récent, même simple ?",
+      followAmbiguous: "Dans quel cas changeriez-vous d’avis ?",
+      followTask: "Qu’est-ce que vous vérifiez en premier dans ce cas ?",
+      followProblem: "Comment savez-vous que le problème vient de là ?",
+      followTools: "Quel composant, quelle matière ou quel moyen d’usinage ferait varier votre décision ?",
+      followAbstract: "Avez-vous déjà rencontré un cas client similaire ?",
+      followRisk: "Qu’est-ce qui peut mal se passer si on se trompe ?",
+      followBeginner: "Qu’est-ce qu’un débutant risquerait de mal interpréter ?",
       closingPrompt:
-        "Parfait. Vous pouvez terminer l’entretien. Le dossier manager sera mis à jour automatiquement.",
-      managerEmpty: "Aucun dossier n’est encore disponible.",
+        "Parfait. Vous pouvez terminer l’entretien. Les fiches d’expertise seront mises à jour automatiquement.",
+      managerEmpty: "Aucune capture d’expertise n’est encore disponible.",
       managerEmptyAction: "Charger un exemple",
     },
     en: {
@@ -141,9 +233,11 @@
       landingSubtitle:
         "An interview space for the employee, then a manager space to review and structure that know-how.",
       interviewSurface: "Ask the right questions and capture answers with minimal friction.",
-      managerSurface: "Track interviewees and open each handover file.",
+      managerSurface: "Track technical interviews and open expertise sheets.",
       startInterview: "Start an interview",
       openManager: "Open manager area",
+      interviewLinkHint: "Received an interview link? Open it directly.",
+      manualInterview: "Manual start",
       backHome: "Back to home",
       languageFr: "Français",
       languageEn: "English",
@@ -176,10 +270,17 @@
       nextStep: "Next",
       reset: "Start over",
       finishInterview: "Finish interview",
+      interviewSteps: "Interview steps",
       noInterviewYet: "No active interview",
       startTitle: "Start",
       managerTitle: "Interviewed people",
-      managerSubtitle: "Simple interview tracking and access to each handover file.",
+      managerSubtitle: "Simple technical interview tracking and access to expertise sheets.",
+      managerCreateLink: "Create interview link",
+      interviewLink: "Interview link",
+      copyLink: "Copy link",
+      sendInvite: "Send invitation",
+      invalidTokenTitle: "Invalid link",
+      invalidTokenBody: "This interview link is not recognised or is no longer available on this device.",
       people: "People",
       openFile: "Open file",
       progressLabel: "Progress",
@@ -252,8 +353,14 @@
     sessions: loadJson(STORAGE_KEYS.sessions, []),
     documents: loadJson(STORAGE_KEYS.documents, []),
     activeSessionId: loadString(STORAGE_KEYS.activeSessionId),
-    answerMode: "type",
+    answerMode: "speak",
     draftAnswer: "",
+    pauseConfirmationSessionId: null,
+    finishConfirmationSessionId: null,
+    createdSessionId: null,
+    selectedDashboardSessionId: null,
+    activeThemeId: "drilled-block-design",
+    lastRouteKey: "",
     speech: {
       supported: false,
       listening: false,
@@ -263,11 +370,13 @@
     },
     currentDocId: null,
     showDemoNotice: false,
+    showCreateInterview: false,
   };
 
   initializeSpeech();
   normalizeSeedState();
   window.addEventListener("hashchange", render);
+  window.addEventListener("popstate", render);
   window.addEventListener("beforeunload", stopSpeechIfNeeded);
   render();
 
@@ -309,12 +418,7 @@
   }
 
   function loadLanguage() {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEYS.language);
-      return stored === "en" ? "en" : "fr";
-    } catch {
-      return "fr";
-    }
+    return "fr";
   }
 
   function createId() {
@@ -323,6 +427,38 @@
     }
 
     return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  function encodeDemoPayload(payload) {
+    try {
+      const json = JSON.stringify(payload);
+      return btoa(unescape(encodeURIComponent(json)))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/g, "");
+    } catch {
+      return "";
+    }
+  }
+
+  function decodeDemoPayload() {
+    const value = new URLSearchParams(window.location.search).get("demo");
+    if (!value) return null;
+
+    try {
+      const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
+      return JSON.parse(decodeURIComponent(escape(atob(padded))));
+    } catch {
+      return null;
+    }
+  }
+
+  function createToken() {
+    return createId();
+  }
+
+  function isValidTokenFormat(token) {
+    return typeof token === "string" && /^[a-z0-9-]{20,}$/i.test(token);
   }
 
   function formatDate(value) {
@@ -340,21 +476,52 @@
     }).format(date);
   }
 
+  function formatTime(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return new Intl.DateTimeFormat("fr-FR", {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  }
+
   function getRoute() {
+    const pathParts = window.location.pathname.split("/").filter(Boolean);
+    if (pathParts[0] === "interview" && pathParts[1]) {
+      return {
+        name: "interview",
+        sessionId: null,
+        token: decodeURIComponent(pathParts.slice(1).join("/")),
+        mode: "token",
+      };
+    }
+
+    if ((pathParts[0] === "manager" || pathParts[0] === "synthesis") && pathParts[1]) {
+      return {
+        name: "manager",
+        sessionId: decodeURIComponent(pathParts[1]),
+        token: null,
+        mode: "path",
+      };
+    }
+
     const hash = window.location.hash || routeLabels.home;
     const cleaned = hash.replace(/^#\/?/, "");
     const parts = cleaned ? cleaned.split("/") : [];
     const root = parts[0] || "";
 
     if (root === "interview") {
-      return { name: "interview", sessionId: parts[1] || null };
+      return { name: "interview", sessionId: parts[1] || null, token: null, mode: "legacy", preview: parts[2] === "preview" };
     }
 
     if (root === "manager") {
-      return { name: "manager", sessionId: parts[1] || null };
+      return { name: "manager", sessionId: parts[1] || null, token: null, mode: "legacy" };
     }
 
-    return { name: "home", sessionId: null };
+    return { name: "home", sessionId: null, token: null, mode: "legacy" };
   }
 
   function setHash(hash) {
@@ -366,34 +533,92 @@
     window.location.hash = hash;
   }
 
+  function setPath(pathname) {
+    const nextUrl = `${pathname}${window.location.search || ""}`;
+    if (`${window.location.pathname}${window.location.search}` === nextUrl) {
+      render();
+      return;
+    }
+
+    window.history.pushState({}, "", nextUrl);
+    render();
+  }
+
+  function buildInterviewLink(token) {
+    return `${window.location.origin}/interview/${encodeURIComponent(token)}`;
+  }
+
+  function buildLocalExpertLink(session) {
+    const link = new URL(`/interview/${encodeURIComponent(session.token || session.id)}`, window.location.origin);
+    const payload = {
+      firstName: session.firstName || "",
+      lastName: session.lastName || "",
+      profile: session.profile || "",
+      roleTitle: session.roleTitle || "",
+      selectedThemeIds: getSessionThemeIds(session),
+    };
+    link.searchParams.set("demo", encodeDemoPayload(payload));
+    return link.toString();
+  }
+
+  function goHome() {
+    setPath("/");
+  }
+
   function getSectionTitle(sectionId) {
     const copy = dictionary();
     switch (sectionId) {
-      case "role-overview":
-        return copy.sectionRole;
-      case "recurring-responsibilities":
-        return copy.sectionTasks;
-      case "step-by-step-tasks":
-        return copy.sectionProcess;
-      case "problem-solving":
-        return copy.sectionProblems;
-      case "tools-files-contacts":
-        return copy.sectionTools;
-      case "wrap-up":
-        return copy.sectionDecisions;
+      case "drilled-block-design":
+        return copy.sectionDrilledBlock;
+      case "schematics-client-need":
+        return copy.sectionSchematics;
+      case "material-choices":
+        return copy.sectionMaterials;
+      case "pressure-safety":
+        return copy.sectionPressure;
+      case "surface-treatments":
+        return copy.sectionSurface;
+      case "hydraulic-components":
+        return copy.sectionComponents;
+      case "leak-diagnosis":
+        return copy.sectionLeaks;
+      case "troubleshooting-order":
+        return copy.sectionTroubleshooting;
+      case "machining-feasibility":
+        return copy.sectionMachining;
+      case "frequent-errors":
+        return copy.sectionErrors;
+      case "weak-signals":
+        return copy.sectionWeakSignals;
+      case "customer-cases":
+        return copy.sectionCases;
+      case "experience-transfer":
+        return copy.sectionTransfer;
       default:
         return sectionId;
     }
   }
 
-  function createSections(currentSectionId) {
-    return SECTION_ORDER.map((sectionId) => ({
+  function normalizeThemeIds(themeIds) {
+    const clean = Array.isArray(themeIds)
+      ? themeIds.filter((id) => SECTION_ORDER.includes(id))
+      : [];
+    return clean.length ? clean : [...SECTION_ORDER];
+  }
+
+  function getSessionThemeIds(session) {
+    return normalizeThemeIds(session?.selectedThemeIds);
+  }
+
+  function createSections(currentSectionId, themeIds = SECTION_ORDER) {
+    const orderedThemeIds = normalizeThemeIds(themeIds);
+    return orderedThemeIds.map((sectionId) => ({
       id: sectionId,
       title: getSectionTitle(sectionId),
       status:
         sectionId === currentSectionId
           ? "current"
-          : SECTION_ORDER.indexOf(sectionId) < SECTION_ORDER.indexOf(currentSectionId)
+          : orderedThemeIds.indexOf(sectionId) < orderedThemeIds.indexOf(currentSectionId)
             ? "complete"
             : "upcoming",
     }));
@@ -402,116 +627,145 @@
   function getSectionQuestion(sectionId) {
     const copy = dictionary();
     switch (sectionId) {
-      case "role-overview":
-        return copy.qRole;
-      case "recurring-responsibilities":
-        return copy.qRecurring;
-      case "step-by-step-tasks":
-        return copy.qProcess;
-      case "problem-solving":
-        return copy.qProblems;
-      case "tools-files-contacts":
-        return copy.qTools;
-      case "wrap-up":
+      case "drilled-block-design":
+        return copy.qDrilledBlock;
+      case "schematics-client-need":
+        return copy.qSchematics;
+      case "material-choices":
+        return copy.qMaterials;
+      case "pressure-safety":
+        return copy.qPressure;
+      case "surface-treatments":
+        return copy.qSurface;
+      case "hydraulic-components":
+        return copy.qComponents;
+      case "leak-diagnosis":
+        return copy.qLeaks;
+      case "troubleshooting-order":
+        return copy.qTroubleshooting;
+      case "machining-feasibility":
+        return copy.qMachining;
+      case "frequent-errors":
+        return copy.qErrors;
+      case "weak-signals":
+        return copy.qWeakSignals;
+      case "customer-cases":
+        return copy.qCases;
+      case "experience-transfer":
       default:
-        return copy.qWrap;
+        return copy.qTransfer;
     }
   }
 
-  function createBlankSession(firstName, lastName) {
+  function createBlankSession(firstName, lastName, token, selectedThemeIds) {
     const createdAt = new Date().toISOString();
+    const themeIds = normalizeThemeIds(selectedThemeIds);
+    const firstSectionId = themeIds[0];
     return {
       id: createId(),
+      token: token || createToken(),
+      tokenExpiresAt: null,
       firstName,
       lastName,
       language: appState.language,
-      roleTitle: appState.language === "fr" ? "Entretien en cours" : "Interview in progress",
+      roleTitle: "Expertise hydraulique NumerHyd",
+      profile: "",
       source: "live",
-      currentSectionId: "role-overview",
-      completionPercent: 6,
+      selectedThemeIds: themeIds,
+      currentSectionId: firstSectionId,
+      completionPercent: 0,
       answeredPromptCount: 0,
       updatedAt: createdAt,
+      startedAt: null,
+      sessionCount: 0,
+      durationMinutes: 0,
+      draftAnswer: "",
+      draftUpdatedAt: createdAt,
+      pausedAt: null,
+      partialSubmittedAt: null,
+      completedAt: null,
+      contextNote: "",
       messages: [
         {
           id: createId(),
           role: "assistant",
-          content: getSectionQuestion("role-overview"),
-          sectionId: "role-overview",
+          content: getSectionQuestion(firstSectionId),
+          sectionId: firstSectionId,
           createdAt,
         },
       ],
-      sections: createSections("role-overview"),
+      sections: createSections(firstSectionId, themeIds),
     };
   }
 
   function seedSampleSession(language) {
     const now = Date.now();
     const messages = [
-      assistantMsg(language, "role-overview", getSectionQuestion("role-overview"), now - 28 * 60000),
+      assistantMsg(language, "drilled-block-design", getSectionQuestion("drilled-block-design"), now - 58 * 60000),
       userMsg(
-        language === "fr"
-          ? "Je reçois les urgences atelier, je regarde si la machine est vraiment immobilisée, puis je protège le planning des techniciens et le risque pièces avant de promettre quoi que ce soit."
-          : "I receive urgent workshop requests, check whether the machine is truly down, then protect technician time and parts risk before promising anything.",
-        "role-overview",
-        now - 27 * 60000,
+        "Je commence toujours par comprendre ce que le bloc doit faire dans la machine. Je regarde les fonctions à intégrer, les débits, les pressions, les encombrements et surtout les zones où le client ne dit pas tout. Si le besoin est flou, je ne pars pas directement en perçage, je reviens au schéma et au cycle machine.",
+        "drilled-block-design",
+        now - 55 * 60000,
       ),
-      assistantMsg(language, "recurring-responsibilities", getSectionQuestion("recurring-responsibilities"), now - 26 * 60000),
+      assistantMsg(language, "schematics-client-need", getSectionQuestion("schematics-client-need"), now - 52 * 60000),
       userMsg(
-        language === "fr"
-          ? "Chaque semaine je trie les vraies urgences, j’affecte les techniciens selon le niveau de diagnostic demandé, je vérifie si le dossier est exploitable et je rappelle les clients quand le devis reste trop incertain avant démontage."
-          : "Every week I sort real urgencies, assign technicians based on the level of diagnosis required, check whether the file is usable, and call customers back when the quote is still too uncertain before strip-down.",
-        "recurring-responsibilities",
-        now - 24 * 60000,
+        "Sur un schéma, je cherche d’abord la logique de sécurité et les états de repos. Beaucoup d’erreurs viennent du fait qu’on lit les composants un par un sans comprendre la séquence. Je vérifie aussi si le client parle d’un symptôme réel ou d’une solution qu’il a déjà imaginée.",
+        "schematics-client-need",
+        now - 49 * 60000,
       ),
-      assistantMsg(language, "step-by-step-tasks", getSectionQuestion("step-by-step-tasks"), now - 22 * 60000),
+      assistantMsg(language, "material-choices", getSectionQuestion("material-choices"), now - 45 * 60000),
       userMsg(
-        language === "fr"
-          ? "Quand une pompe hydraulique arrive en urgence, je regarde d’abord si la fiche mentionne bien le symptôme, l’environnement et la pression de service. Ensuite je demande les photos, je vérifie l’historique ERP, puis j’ouvre le dossier atelier seulement si le technicien aura assez d’éléments pour éviter un démontage à l’aveugle."
-          : "When an urgent hydraulic pump comes in, I first check whether the job sheet clearly states the symptom, environment, and working pressure. Then I ask for photos, check the ERP history, and only release the job to the workshop if the technician has enough information to avoid a blind strip-down.",
-        "step-by-step-tasks",
+        "Pour un bloc foré, l’aluminium peut être très bien si la pression, le fluide et l’environnement sont maîtrisés. Mais dès qu’il y a choc, vibration, corrosion ou serrage critique, je reviens sur l’acier ou sur un traitement adapté. Le piège, c’est de choisir la matière seulement au prix.",
+        "material-choices",
+        now - 42 * 60000,
+      ),
+      assistantMsg(language, "leak-diagnosis", getSectionQuestion("leak-diagnosis"), now - 38 * 60000),
+      userMsg(
+        "Quand un client dit que ça fuit, je demande où, quand et dans quelles conditions. Une fuite à froid au repos n’a pas la même signification qu’une fuite à chaud en montée en pression. Je regarde les plans de joint, les états de surface, le montage des joints et les reprises d’usinage.",
+        "leak-diagnosis",
+        now - 35 * 60000,
+      ),
+      assistantMsg(language, "troubleshooting-order", getSectionQuestion("troubleshooting-order"), now - 31 * 60000),
+      userMsg(
+        "Je commence par les choses simples et visibles : pression réelle, sens de montage, pollution, température, réglage des limiteurs. Ensuite seulement je vais vers les hypothèses plus complexes. Un débutant veut souvent démonter trop vite alors qu’il n’a pas confirmé la condition de panne.",
+        "troubleshooting-order",
+        now - 28 * 60000,
+      ),
+      assistantMsg(language, "customer-cases", getSectionQuestion("customer-cases"), now - 24 * 60000),
+      userMsg(
+        "On a eu un cas client où le bloc était accusé alors que le problème venait du cycle machine. Le signal faible, c’était une fuite annoncée uniquement après plusieurs minutes de fonctionnement. En réalité, la température faisait évoluer la viscosité et révélait un mauvais réglage en amont.",
+        "customer-cases",
         now - 20 * 60000,
       ),
-      assistantMsg(language, "problem-solving", getSectionQuestion("problem-solving"), now - 18 * 60000),
+      assistantMsg(language, "experience-transfer", getSectionQuestion("experience-transfer"), now - 16 * 60000),
       userMsg(
-        language === "fr"
-          ? "Le plus pénible, c’est la fiche incomplète, la pièce fournisseur qui glisse alors que le client est arrêté, ou le commercial qui vend déjà un délai avant qu’on sache l’état réel de l’intérieur. On voit vite que ça sent le problème quand personne n’arrive à dire depuis quand la panne est apparue ou quand le devis est demandé avant diagnostic sérieux."
-          : "The worst cases are incomplete job sheets, supplier parts slipping while the customer is down, or sales already promising a lead time before we know the real internal condition. You can tell it is going wrong quickly when no one can say how long the fault has existed or when a quote is requested before a serious diagnosis.",
-        "problem-solving",
-        now - 16 * 60000,
-      ),
-      assistantMsg(language, "tools-files-contacts", getSectionQuestion("tools-files-contacts"), now - 14 * 60000),
-      userMsg(
-        language === "fr"
-          ? "J’utilise l’ERP Atelier pour l’historique et le statut, la boîte mail partagée pour les confirmations client, le dossier réseau Hydraulique/Devis urgents pour les photos et devis, un tableau Excel délais critiques pour les pièces longues, et deux contacts fournisseurs qu’il faut appeler directement quand une machine client est immobilisée."
-          : "I use the workshop ERP for history and status, the shared mailbox for customer confirmations, the network folder Hydraulics/Urgent Quotes for photos and quotes, an Excel critical lead-time tracker for long parts, and two supplier contacts that must be called directly when a customer machine is down.",
-        "tools-files-contacts",
+        "Il faut apprendre à ne pas croire la première formulation du problème. Il faut faire parler le client sur le contexte réel, regarder les contraintes de fabrication et vérifier les hypothèses dans l’ordre. L’expérience, c’est surtout savoir quand une information manque.",
+        "experience-transfer",
         now - 12 * 60000,
       ),
-      assistantMsg(language, "wrap-up", getSectionQuestion("wrap-up"), now - 10 * 60000),
-      userMsg(
-        language === "fr"
-          ? "La vraie difficulté, ce n’est pas le planning théorique. C’est de sentir quand une urgence est réelle, quand il faut protéger l’atelier d’un dossier faible, et quand il faut arrêter la promesse client parce que le chiffrage devient trop risqué sans démontage."
-          : "The real difficulty is not the theoretical plan. It is knowing when an urgency is real, when you must protect the workshop from a weak file, and when you have to stop the customer promise because pricing becomes too risky without strip-down.",
-        "wrap-up",
-        now - 8 * 60000,
-      ),
-      assistantMsg(language, "wrap-up", dictionaries[language].closingPrompt, now - 7 * 60000),
+      assistantMsg(language, "experience-transfer", dictionaries[language].closingPrompt, now - 10 * 60000),
     ];
 
     const session = {
       id: createId(),
-      firstName: language === "fr" ? "Jean" : "Jean",
-      lastName: language === "fr" ? "Dupont" : "Dupont",
+      token: createToken(),
+      tokenExpiresAt: null,
+      firstName: "Expert",
+      lastName: "NumerHyd",
       language,
-      roleTitle:
-        language === "fr"
-          ? "Responsable atelier hydraulique"
-          : "Hydraulics workshop manager",
+      roleTitle: "Expert senior hydraulique",
       source: "sample",
-      currentSectionId: "wrap-up",
+      currentSectionId: "experience-transfer",
       completionPercent: 100,
-      answeredPromptCount: 6,
-      updatedAt: new Date(now - 7 * 60000).toISOString(),
+      answeredPromptCount: 7,
+      updatedAt: new Date(now - 10 * 60000).toISOString(),
+      startedAt: new Date(now - 58 * 60000).toISOString(),
+      draftAnswer: "",
+      draftUpdatedAt: new Date(now - 10 * 60000).toISOString(),
+      pausedAt: null,
+      completedAt: new Date(now - 10 * 60000).toISOString(),
+      partialSubmittedAt: null,
+      contextNote: "Exemple de démonstration chargé localement.",
       messages,
       sections: SECTION_ORDER.map((id) => ({
         id,
@@ -543,13 +797,195 @@
     };
   }
 
+  function buildDemoSession({ firstName, lastName, profile, roleTitle, selectedThemeIds, answers, status, sessionCount, durationMinutes, offsetMinutes }) {
+    const now = Date.now();
+    const session = createBlankSession(firstName, lastName, createToken(), selectedThemeIds);
+    const themeIds = getSessionThemeIds(session);
+    const messages = [];
+    themeIds.forEach((sectionId, index) => {
+      const time = now - (offsetMinutes - index * 6) * 60000;
+      messages.push(assistantMsg("fr", sectionId, getSectionQuestion(sectionId), time));
+      if (answers[sectionId]) {
+        messages.push(userMsg(answers[sectionId], sectionId, time + 2 * 60000));
+      }
+    });
+    const answeredIds = Object.keys(answers).filter((id) => themeIds.includes(id));
+    const lastAnsweredId = answeredIds[answeredIds.length - 1] || themeIds[0];
+    const nextTheme = themeIds.find((id) => !answeredIds.includes(id)) || lastAnsweredId;
+    const updatedAt = new Date(now - Math.max(4, offsetMinutes - answeredIds.length * 6) * 60000).toISOString();
+
+    return {
+      ...session,
+      firstName,
+      lastName,
+      profile,
+      roleTitle,
+      source: "demo-v2",
+      selectedThemeIds: themeIds,
+      currentSectionId: nextTheme,
+      completionPercent: Math.round((answeredIds.length / themeIds.length) * 100),
+      answeredPromptCount: answeredIds.length,
+      updatedAt,
+      startedAt: new Date(now - offsetMinutes * 60000).toISOString(),
+      sessionCount,
+      durationMinutes,
+      pausedAt: status === "paused" ? updatedAt : null,
+      partialSubmittedAt: status === "partial" ? updatedAt : null,
+      completedAt: status === "done" ? updatedAt : null,
+      finishedAt: status === "done" || status === "partial" ? updatedAt : null,
+      messages,
+      sections: createSections(nextTheme, themeIds),
+    };
+  }
+
+  function seedCockpitDemo() {
+    const sellerThemes = [...SECTION_ORDER];
+    const workshopThemes = [
+      "leak-diagnosis",
+      "troubleshooting-order",
+      "machining-feasibility",
+      "frequent-errors",
+      "weak-signals",
+      "customer-cases",
+    ];
+    const seller = buildDemoSession({
+      firstName: "Le",
+      lastName: "cédant",
+      profile: "Cédant / dirigeant",
+      roleTitle: "Transmission d’expérience hydraulique",
+      selectedThemeIds: sellerThemes,
+      status: "partial",
+      sessionCount: 2,
+      durationMinutes: 74,
+      offsetMinutes: 140,
+      answers: {
+        "drilled-block-design": "Je commence par comprendre ce que le bloc doit faire dans la machine : fonctions, débits, pression, encombrement et contraintes de montage.",
+        "schematics-client-need": "Sur un schéma, je cherche d’abord les états de repos et la logique de sécurité. Il faut comprendre le besoin réel avant de dessiner une solution.",
+        "material-choices": "L’acier devient préférable quand il y a choc, pression élevée, serrage critique ou risque de déformation. Le piège est de choisir seulement au prix.",
+        "leak-diagnosis": "Pour une fuite, je demande où, quand et à quelle température. Une fuite à chaud n’a pas la même cause probable qu’une fuite à froid.",
+      },
+    });
+    const workshop = buildDemoSession({
+      firstName: "Le chef",
+      lastName: "d’atelier",
+      profile: "Chef d’atelier",
+      roleTitle: "Réflexes atelier et troubleshooting",
+      selectedThemeIds: workshopThemes,
+      status: "paused",
+      sessionCount: 1,
+      durationMinutes: 32,
+      offsetMinutes: 90,
+      answers: {
+        "leak-diagnosis": "Je commence par nettoyer, localiser précisément la fuite et vérifier si elle vient du joint, du plan de joint ou d’une reprise d’usinage.",
+        "troubleshooting-order": "Je vérifie d’abord les choses simples : sens de montage, réglage des limiteurs, pollution, pression réelle et température.",
+        "frequent-errors": "Un débutant démonte souvent trop vite. Il faut d’abord confirmer la condition de panne et reproduire le symptôme.",
+      },
+    });
+
+    appState.sessions = [seller, workshop];
+    appState.documents = appState.sessions.map(generateDocument);
+    appState.activeSessionId = null;
+    appState.showDemoNotice = false;
+    try {
+      window.localStorage.setItem(STORAGE_KEYS.demoVersion, DEMO_VERSION);
+    } catch {
+      // Ignore localStorage write failures for this prototype.
+    }
+    persist();
+  }
+
   function normalizeSeedState() {
+    let changed = false;
+
+    try {
+      const currentVersion = window.localStorage.getItem(STORAGE_KEYS.demoVersion);
+      if (currentVersion !== DEMO_VERSION) {
+        seedCockpitDemo();
+        return;
+      }
+    } catch {
+      // Continue with existing in-memory state.
+    }
+
     if (!Array.isArray(appState.sessions)) {
       appState.sessions = [];
     }
 
     if (!Array.isArray(appState.documents)) {
       appState.documents = [];
+    }
+
+    const oldDocumentCount = appState.documents.length;
+    appState.documents = appState.documents.filter(
+      (document) => document && document.title === dictionary().docTitle,
+    );
+    if (appState.documents.length !== oldDocumentCount) {
+      changed = true;
+    }
+
+    appState.sessions = appState.sessions.map((session) => {
+      if (!session) {
+        changed = true;
+        return createBlankSession("", "");
+      }
+
+      let nextSession = session.token ? session : { ...session, token: createToken() };
+      if (!session.token) {
+        changed = true;
+      }
+
+      if (!SECTION_ORDER.includes(nextSession.currentSectionId)) {
+        changed = true;
+        const themeIds = getSessionThemeIds(nextSession);
+        nextSession = {
+          ...nextSession,
+          selectedThemeIds: themeIds,
+          currentSectionId: themeIds[0],
+          completionPercent: nextSession.completionPercent || 0,
+          sections: createSections(themeIds[0], themeIds),
+        };
+      }
+
+      const sessionThemeIds = getSessionThemeIds(nextSession);
+      if (
+        !Array.isArray(nextSession.sections) ||
+        nextSession.sections.length !== sessionThemeIds.length ||
+        nextSession.sections.some((section) => !sessionThemeIds.includes(section.id))
+      ) {
+        changed = true;
+        nextSession = {
+          ...nextSession,
+          selectedThemeIds: sessionThemeIds,
+          sections: createSections(nextSession.currentSectionId, sessionThemeIds),
+        };
+      }
+
+      if (!nextSession.draftUpdatedAt) {
+        changed = true;
+        nextSession = {
+          ...nextSession,
+          draftAnswer: nextSession.draftAnswer || "",
+          draftUpdatedAt: nextSession.updatedAt || new Date().toISOString(),
+        };
+      }
+
+      if (nextSession.finishedAt && !nextSession.completedAt && !nextSession.partialSubmittedAt) {
+        changed = true;
+        nextSession = isInterviewComplete(nextSession)
+          ? { ...nextSession, completedAt: nextSession.finishedAt }
+          : { ...nextSession, partialSubmittedAt: nextSession.finishedAt };
+      }
+
+      if (!nextSession.roleTitle || /poste|interview/i.test(nextSession.roleTitle)) {
+        changed = true;
+        nextSession = { ...nextSession, roleTitle: "Expertise hydraulique NumerHyd" };
+      }
+
+      return nextSession;
+    });
+
+    if (changed) {
+      persist();
     }
   }
 
@@ -559,6 +995,73 @@
 
   function getActiveSession() {
     return appState.activeSessionId ? getSessionById(appState.activeSessionId) : null;
+  }
+
+  function getAnsweredThemeCount(session) {
+    if (!session || !Array.isArray(session.messages)) return 0;
+    const themeIds = getSessionThemeIds(session);
+    return new Set(
+      session.messages
+        .filter((message) => message.role === "user" && themeIds.includes(message.sectionId))
+        .map((message) => message.sectionId),
+    ).size;
+  }
+
+  function isInterviewComplete(session) {
+    return getAnsweredThemeCount(session) >= getSessionThemeIds(session).length || session.completionPercent >= 100;
+  }
+
+  function getSessionStatus(session) {
+    const copy = dictionary();
+    if (session.completedAt || (session.finishedAt && isInterviewComplete(session))) return copy.statusDone;
+    if (session.partialSubmittedAt || (session.finishedAt && !isInterviewComplete(session))) return copy.statusPartial;
+    if (session.pausedAt) return copy.statusPaused;
+    if (session.startedAt || getAnsweredThemeCount(session) > 0) return copy.statusProgress;
+    return copy.statusNotStarted;
+  }
+
+  function getDashboardStatus(session) {
+    const copy = dictionary();
+    if (session.completedAt || (session.finishedAt && isInterviewComplete(session))) return copy.statusDone;
+    if (session.startedAt || session.pausedAt || session.partialSubmittedAt || getAnsweredThemeCount(session) > 0) {
+      return copy.statusProgress;
+    }
+    return copy.statusNotStarted;
+  }
+
+  function getProgressText(session) {
+    const answered = getAnsweredThemeCount(session);
+    return `${answered}/${getSessionThemeIds(session).length} ${dictionary().answeredQuestions}`;
+  }
+
+  function getSessionByToken(token) {
+    return appState.sessions.find((item) => item.token === token) || null;
+  }
+
+  function getOrCreateSessionByToken(token) {
+    if (!isValidTokenFormat(token)) {
+      return null;
+    }
+
+    const existing = getSessionByToken(token);
+    if (existing) {
+      return existing;
+    }
+
+    const demoPayload = decodeDemoPayload();
+    const selectedThemeIds = normalizeThemeIds(demoPayload?.selectedThemeIds || SECTION_ORDER);
+    const session = createBlankSession(
+      demoPayload?.firstName || "",
+      demoPayload?.lastName || "",
+      token,
+      selectedThemeIds,
+    );
+    session.profile = demoPayload?.profile || "";
+    session.roleTitle = demoPayload?.roleTitle || "Entretien technique à démarrer";
+    session.contextNote = "Entretien recréé depuis un lien de démonstration public.";
+    saveSession(session, false);
+    saveDocument(generateDocument(session));
+    return session;
   }
 
   function saveSession(session, makeActive = true) {
@@ -574,6 +1077,44 @@
     }
 
     persist();
+  }
+
+  function saveDraftForSession(session, value) {
+    if (!session) return null;
+    const now = new Date().toISOString();
+    const nextSession = {
+      ...session,
+      draftAnswer: value,
+      draftUpdatedAt: now,
+      updatedAt: now,
+    };
+    saveSession(nextSession);
+    patchSaveStatus(now);
+    return nextSession;
+  }
+
+  function patchSaveStatus(value) {
+    const target = document.querySelector("#save-status");
+    if (target) {
+      target.textContent = `${dictionary().savedAt} ${formatTime(value)} · ${dictionary().saveNotice}`;
+    }
+  }
+
+  function getCurrentRouteSession() {
+    const route = getRoute();
+    if (route.name !== "interview") {
+      return null;
+    }
+
+    if (route.token) {
+      return getSessionByToken(route.token);
+    }
+
+    if (route.sessionId) {
+      return getSessionById(route.sessionId);
+    }
+
+    return getActiveSession();
   }
 
   function saveDocument(document) {
@@ -599,14 +1140,14 @@
   function analyzeText(text) {
     const normalized = text.toLowerCase();
     const wordCount = normalized.trim().split(/\s+/).filter(Boolean).length;
-    const hasAmbiguity = /\b(sometimes|depends|usually|often|parfois|ça dépend|souvent|généralement)\b/.test(normalized);
-    const hasProblem = /\b(issue|problem|error|failure|breakdown|mistake|panne|problème|erreur|blocage|dérive|glisse)\b/.test(normalized);
-    const hasTool = /\b(folder|file|excel|erp|email|drive|software|mailbox|spreadsheet|shared|dossier|fichier|excel|erp|mail|boîte|tableau|réseau)\b/.test(normalized);
-    const hasTask = /\b(check|schedule|assign|call|prepare|launch|verify|quote|plan|triage|organise|vérifie|affecte|prépare|lance|planifie|diagnostique|rappelle|ouvre)\b/.test(normalized);
-    const hasExample = /\b(example|recent|last week|for example|par exemple|récemment|la semaine dernière|hier)\b/.test(normalized);
-    const hasSteps = /\b(first|then|after|before|ensuite|puis|d’abord|avant|après)\b/.test(normalized);
-    const hasLocation = /\b(folder|drive|mailbox|shared|réseau|dossier|boîte|chemin|dans le dossier|dans le réseau)\b/.test(normalized);
-    const hasContacts = /\b(contact|supplier|sales|customer|technician|commercial|fournisseur|client|technicien|achat)\b/.test(normalized);
+    const hasAmbiguity = /\b(sometimes|depends|usually|often|parfois|ça dépend|souvent|généralement|selon|si)\b/.test(normalized);
+    const hasProblem = /\b(issue|problem|error|failure|breakdown|mistake|panne|problème|erreur|blocage|dérive|fuite|casse|risque|défaut|pollution)\b/.test(normalized);
+    const hasTool = /\b(folder|file|excel|erp|email|drive|software|mailbox|spreadsheet|shared|dossier|fichier|excel|erp|mail|boîte|tableau|réseau|machine|usinage|outil|foret|taraud|alésage|cnc|tour|fraiseuse)\b/.test(normalized);
+    const hasTask = /\b(check|schedule|assign|call|prepare|launch|verify|quote|plan|triage|organise|vérifie|contrôle|mesure|choisis|choix|calcule|diagnostique|rappelle|ouvre|regarde|commence|valide)\b/.test(normalized);
+    const hasExample = /\b(example|recent|last week|for example|par exemple|récemment|la semaine dernière|hier|cas client|client|chantier|machine)\b/.test(normalized);
+    const hasSteps = /\b(first|then|after|before|ensuite|puis|d’abord|avant|après|premier|dans l’ordre|étape)\b/.test(normalized);
+    const hasLocation = /\b(folder|drive|mailbox|shared|réseau|dossier|boîte|chemin|dans le dossier|dans le réseau|plan|schéma|atelier)\b/.test(normalized);
+    const hasContacts = /\b(contact|supplier|sales|customer|technician|commercial|fournisseur|client|technicien|achat|usineur|atelier)\b/.test(normalized);
 
     return {
       wordCount,
@@ -638,22 +1179,13 @@
     const examples = analyses.filter((item) => item.hasExample).length;
     const totalWords = analyses.reduce((sum, item) => sum + item.wordCount, 0);
 
-    switch (sectionId) {
-      case "role-overview":
-        return substantial >= 2 || (tasks >= 1 && totalWords >= 60) || examples >= 1;
-      case "recurring-responsibilities":
-        return tasks >= 2 || messages.length >= 2;
-      case "step-by-step-tasks":
-        return steps >= 1 && substantial >= 1;
-      case "problem-solving":
-        return problems >= 2 || messages.length >= 2;
-      case "tools-files-contacts":
-        return tools >= 2 || (tools >= 1 && locations >= 1);
-      case "wrap-up":
-        return messages.length >= 1;
-      default:
-        return false;
-    }
+    if (messages.length >= 2) return true;
+    if (sectionId === "customer-cases") return examples >= 1 && totalWords >= 30;
+    if (sectionId === "troubleshooting-order") return steps >= 1 && totalWords >= 24;
+    if (sectionId === "leak-diagnosis") return problems >= 1 && totalWords >= 24;
+    if (sectionId === "machining-feasibility") return tools >= 1 && totalWords >= 24;
+    if (sectionId === "experience-transfer") return totalWords >= 24;
+    return substantial >= 1 || (tasks >= 1 && totalWords >= 24) || examples >= 1;
   }
 
   function buildFollowUp(text, sectionId) {
@@ -662,6 +1194,14 @@
 
     if (analysis.wordCount < 20) {
       return copy.followShort;
+    }
+
+    if (sectionId === "frequent-errors") {
+      return copy.followBeginner;
+    }
+
+    if (sectionId === "pressure-safety" || sectionId === "material-choices") {
+      return copy.followRisk;
     }
 
     if (analysis.hasAmbiguity) {
@@ -676,7 +1216,7 @@
       return copy.followTools;
     }
 
-    if (analysis.hasTask || sectionId === "recurring-responsibilities" || sectionId === "step-by-step-tasks") {
+    if (analysis.hasTask || sectionId === "troubleshooting-order" || sectionId === "machining-feasibility") {
       return copy.followTask;
     }
 
@@ -713,12 +1253,15 @@
     let assistantContent = followUp;
 
     if (sectionDone) {
-      const currentIndex = SECTION_ORDER.indexOf(session.currentSectionId);
-      nextSectionId = SECTION_ORDER[Math.min(currentIndex + 1, SECTION_ORDER.length - 1)];
+      const themeIds = getSessionThemeIds(session);
+      const currentIndex = themeIds.indexOf(session.currentSectionId);
+      nextSectionId = themeIds[Math.min(currentIndex + 1, themeIds.length - 1)];
       assistantContent =
         nextSectionId === session.currentSectionId
           ? dictionary().closingPrompt
           : getSectionQuestion(nextSectionId);
+    } else if (followUp) {
+      assistantContent = `J’aimerais préciser un point : ${followUp}`;
     }
 
     if (!assistantContent) {
@@ -734,24 +1277,31 @@
     });
 
     const answeredPromptCount = session.answeredPromptCount + 1;
+    const themeIds = getSessionThemeIds(session);
+    const isLastSection = nextSectionId === themeIds[themeIds.length - 1];
+    const answeredThemes = new Set(
+      nextMessages
+        .filter((message) => message.role === "user" && themeIds.includes(message.sectionId))
+        .map((message) => message.sectionId),
+    ).size;
     const completionPercent = Math.min(
       100,
-      Math.round(((SECTION_ORDER.indexOf(nextSectionId) + (nextSectionId === "wrap-up" ? 1 : 0)) / SECTION_ORDER.length) * 100),
+      Math.round((answeredThemes / themeIds.length) * 100),
     );
 
     return {
       ...session,
       currentSectionId: nextSectionId,
       answeredPromptCount,
-      completionPercent: nextSectionId === "wrap-up" && sectionDone ? 100 : Math.max(session.completionPercent, completionPercent),
+      completionPercent: isLastSection && sectionDone ? 100 : Math.max(session.completionPercent, completionPercent),
       updatedAt: new Date().toISOString(),
       messages: nextMessages,
-      sections: createSections(nextSectionId).map((section) => ({
+      sections: createSections(nextSectionId, themeIds).map((section) => ({
         ...section,
         status:
           section.id === nextSectionId
             ? "current"
-            : SECTION_ORDER.indexOf(section.id) < SECTION_ORDER.indexOf(nextSectionId)
+            : themeIds.indexOf(section.id) < themeIds.indexOf(nextSectionId)
               ? "complete"
               : "upcoming",
       })),
@@ -770,7 +1320,7 @@
 
     const responsibilities = unique(
       clauses.filter((clause) =>
-        /\b(urgence|planning|technicien|devis|atelier|client|fournisseur|schedule|technician|quote|supplier|customer|workshop)\b/i.test(
+        /\b(choix|choisis|vérifie|contrôle|diagnostic|schéma|pression|matière|matériau|bloc|foré|composant|usinage|traitement|client|sécurité|résistance)\b/i.test(
           clause,
         ),
       ),
@@ -778,7 +1328,7 @@
 
     const issues = unique(
       clauses.filter((clause) =>
-        /\b(problème|panne|erreur|incomplète|incomplet|délai|risque|issue|error|failure|delay|uncertain|incomplete)\b/i.test(
+        /\b(problème|panne|erreur|fuite|risque|défaut|pression|pollution|casse|mal|oublier|interpréter|sécurité|débutant)\b/i.test(
           clause,
         ),
       ),
@@ -786,7 +1336,7 @@
 
     const tools = unique(
       clauses.filter((clause) =>
-        /\b(erp|excel|mail|boîte|dossier|réseau|shared|folder|mailbox|spreadsheet|contact|fournisseur|supplier)\b/i.test(
+        /\b(schéma|plan|bloc|joint|pression|débit|matière|aluminium|acier|usinage|machine|surface|composant|limiteur|pompe|vérin|valve)\b/i.test(
           clause,
         ),
       ),
@@ -795,31 +1345,25 @@
     const contacts = unique(
       clauses
         .filter((clause) =>
-          /\b(fournisseur|commercial|client|technicien|supplier|sales|customer|technician)\b/i.test(clause),
+          /\b(client|cas client|machine|chantier|atelier|fournisseur)\b/i.test(clause),
         )
         .map(compactSentence),
     ).slice(0, 4);
 
     const gaps = [];
-    if (!combined.match(/\b(réseau|dossier|shared|folder|mailbox|boîte)\b/i)) {
+    if (!combined.match(/\b(exemple|cas client|client|machine)\b/i)) {
       gaps.push(
-        appState.language === "fr"
-          ? "Préciser où se trouvent les dossiers et fichiers critiques."
-          : "Clarify where critical folders and files are stored.",
+        "Ajouter au moins un cas client concret.",
       );
     }
-    if (!combined.match(/\b(d’abord|ensuite|puis|first|then|after)\b/i)) {
+    if (!combined.match(/\b(d’abord|ensuite|puis|premier|ordre|avant|après)\b/i)) {
       gaps.push(
-        appState.language === "fr"
-          ? "Documenter plus précisément les étapes et les contrôles."
-          : "Document the detailed steps and checks more precisely.",
+        "Préciser l’ordre des contrôles et des vérifications.",
       );
     }
-    if (!combined.match(/\b(appeler|contacter|call|contact)\b/i)) {
+    if (!combined.match(/\b(risque|sécurité|pression|trompe|erreur)\b/i)) {
       gaps.push(
-        appState.language === "fr"
-          ? "Nommer les contacts à appeler quand une machine client est immobilisée."
-          : "Name the people to call when a customer machine is down.",
+        "Clarifier les risques en cas de mauvais diagnostic ou de mauvais choix technique.",
       );
     }
 
@@ -841,153 +1385,164 @@
 
   function generateDocument(session) {
     const summary = extractSummary(session);
-    const roleText =
-      appState.language === "fr"
-        ? `Le responsable atelier reçoit les demandes urgentes, arbitre la charge réelle de l’atelier et évite d’engager un technicien ou un délai client sur un dossier encore trop faible.`
-        : `The workshop manager receives urgent requests, protects the real workshop load, and avoids committing technician time or customer lead times on files that are still too weak.`;
-
-    const proceduresText = summary.responsibilities.length
-      ? summary.responsibilities
-          .map((item, index) => `${index + 1}. ${compactSentence(item)}`)
-          .join("\n")
-      : appState.language === "fr"
-        ? "1. Recevoir la demande\n2. Vérifier si le dossier est exploitable\n3. Confirmer pièces, charge atelier et risque devis"
-        : "1. Receive the request\n2. Check whether the file is workable\n3. Confirm parts, workshop load, and quote risk";
-
-    const troubleshootingText = summary.issues.length
-      ? summary.issues
-          .map((item) =>
-            [
-              `- ${compactSentence(item)}`,
-              appState.language === "fr"
-                ? "  Signes : information incomplète, pression client, délai déjà annoncé, ou pièce critique non confirmée."
-                : "  Signs: incomplete information, customer pressure, pre-sold lead time, or an unconfirmed critical part.",
-              appState.language === "fr"
-                ? "  Premier contrôle : vérifier fiche atelier, historique ERP, disponibilité pièces et personne à rappeler."
-                : "  First check: review the workshop file, ERP history, parts availability, and who needs to be called back.",
-            ].join("\n"),
-          )
-          .join("\n\n")
-      : "";
-
-    const toolsText = summary.tools.length
-      ? summary.tools
-          .map((item) => `- ${compactSentence(item)}`)
-          .join("\n")
-      : appState.language === "fr"
-        ? "- ERP atelier\n- Mail partagé\n- Dossiers réseau"
-        : "- Workshop ERP\n- Shared mailbox\n- Network folders";
-
+    const copy = dictionary();
+    const userMessages = session.messages.filter((message) => message.role === "user");
+    const allAnswers = userMessages.map((message) => compactSentence(message.content));
+    const bySection = (sectionId) =>
+      userMessages
+        .filter((message) => message.sectionId === sectionId)
+        .map((message) => compactSentence(message.content));
+    const pick = (sectionIds, fallback) => {
+      const values = sectionIds.flatMap(bySection).filter(Boolean);
+      return values.length ? values : fallback;
+    };
+    const asList = (values, fallback) => (values.length ? values.slice(0, 6) : fallback);
     const openQuestions = unique(summary.gaps).slice(0, 4);
+    const noData = ["À compléter après les prochaines réponses de l’expert."];
+    const synthesisValues = asList(allAnswers.slice(0, 5), noData);
+    const reasoningValues = asList(
+      pick(
+        [
+          "drilled-block-design",
+          "schematics-client-need",
+          "material-choices",
+          "pressure-safety",
+          "surface-treatments",
+          "hydraulic-components",
+        ],
+        [],
+      ),
+      noData,
+    );
+    const customerValues = asList(pick(["customer-cases", "leak-diagnosis"], []), [copy.noContacts]);
+    const mistakeValues = asList(pick(["frequent-errors", "weak-signals"], []), noData);
+    const checksValues = asList(pick(["leak-diagnosis", "troubleshooting-order", "pressure-safety"], []), noData);
+    const practiceValues = asList(pick(["machining-feasibility", "experience-transfer"], []), noData);
 
     const sections = [
       {
-        id: "role-overview",
-        title: dictionary().roleOverview,
+        id: "synthesis",
+        title: copy.roleOverview,
         status: summary.overallStatus,
-        editableText: roleText,
+        editableText: synthesisValues.map((item) => `- ${item}`).join("\n"),
         fields: [
           {
-            key: appState.language === "fr" ? "Poste" : "Role",
-            value: session.roleTitle,
+            key: "Expert",
+            value: `${session.firstName} ${session.lastName}`.trim() || "Expert NumerHyd",
           },
           {
-            key: appState.language === "fr" ? "Responsabilités clés" : "Key responsibilities",
-            value: summary.responsibilities.length
-              ? summary.responsibilities.map(compactSentence)
-              : [roleText],
+            key: "Synthèse par thème",
+            value: synthesisValues,
           },
           {
-            key: appState.language === "fr" ? "Arbitrages" : "Decision logic",
-            value:
-              appState.language === "fr"
-                ? "Trier les vraies urgences, protéger le planning engagé, et stopper la promesse client quand le risque pièces ou devis devient trop flou."
-                : "Sort real urgencies, protect committed workshop time, and stop customer promises when parts or quote risk becomes too unclear.",
+            key: "Progression",
+            value: getProgressText(session),
           },
         ],
       },
       {
-        id: "procedures",
-        title: dictionary().procedures,
+        id: "technical-reasoning",
+        title: copy.technicalReasoning,
         status: summary.responsibilities.length >= 3 ? "strong" : "partial",
-        editableText: proceduresText,
+        editableText: reasoningValues.map((item) => `- ${item}`).join("\n"),
         fields: [
           {
-            key: appState.language === "fr" ? "Séquence type" : "Typical sequence",
-            value: proceduresText.split("\n"),
+            key: "Choix et arbitrages",
+            value: reasoningValues,
           },
           {
-            key: appState.language === "fr" ? "Point d’arrêt" : "Stop point",
-            value:
-              appState.language === "fr"
-                ? "Arrêter la promesse si la machine n’est pas diagnostiquée, si la pièce critique n’est pas confirmée, ou si le devis reste trop instable."
-                : "Stop the promise if the machine is not diagnosed, the critical part is not confirmed, or the quote is still too unstable.",
+            key: "Points à transformer en règles",
+            value: summary.responsibilities.length ? summary.responsibilities.map(compactSentence) : noData,
           },
         ],
       },
       {
-        id: "troubleshooting",
-        title: dictionary().troubleshooting,
+        id: "customer-cases",
+        title: copy.customerCases,
+        status: customerValues[0] === copy.noContacts ? "needs clarification" : "partial",
+        editableText: customerValues.map((item) => `- ${item}`).join("\n"),
+        fields: [
+          {
+            key: "Cas clients mentionnés",
+            value: customerValues,
+          },
+          {
+            key: "Ce que le cas apprend",
+            value: "Identifier le contexte réel, les conditions d’apparition et les hypothèses qui peuvent être fausses au départ.",
+          },
+        ],
+      },
+      {
+        id: "common-mistakes",
+        title: copy.commonMistakes,
         status: summary.issues.length >= 2 ? "strong" : "partial",
-        editableText: troubleshootingText,
+        editableText: mistakeValues.map((item) => `- ${item}`).join("\n"),
         fields: [
           {
-            key: appState.language === "fr" ? "Cas fréquents" : "Frequent cases",
-            value: summary.issues.length
-              ? summary.issues.map(compactSentence)
-              : [
-                  appState.language === "fr"
-                    ? "Fiches atelier incomplètes"
-                    : "Incomplete workshop job sheets",
-                ],
+            key: "Erreurs fréquentes",
+            value: mistakeValues,
           },
           {
-            key: appState.language === "fr" ? "Premiers contrôles" : "First checks",
-            value:
-              appState.language === "fr"
-                ? "Fiche atelier, historique ERP, photos, pression client réelle, statut pièces et personne à rappeler."
-                : "Workshop sheet, ERP history, photos, real customer pressure, parts status, and who must be called back.",
+            key: "Risques associés",
+            value: summary.issues.length ? summary.issues.map(compactSentence) : noData,
           },
         ],
       },
       {
-        id: "tools-files-contacts",
-        title: dictionary().toolsFilesContacts,
+        id: "checks",
+        title: copy.procedures,
         status: summary.tools.length >= 2 ? "strong" : "partial",
-        editableText: toolsText,
+        editableText: checksValues.map((item) => `- ${item}`).join("\n"),
         fields: [
           {
-            key: appState.language === "fr" ? "Outils repérés" : "Detected tools",
-            value: summary.tools.length ? summary.tools.map(compactSentence) : [toolsText],
+            key: "Contrôles / vérifications à faire",
+            value: checksValues,
           },
           {
-            key: appState.language === "fr" ? "Contacts" : "Contacts",
-            value: summary.contacts.length ? summary.contacts : [dictionary().noContacts],
+            key: "Signaux faibles",
+            value: asList(pick(["weak-signals"], []), noData),
+          },
+        ],
+      },
+      {
+        id: "good-practices",
+        title: copy.goodPractices,
+        status: practiceValues[0] === noData[0] ? "needs clarification" : "partial",
+        editableText: practiceValues.map((item) => `- ${item}`).join("\n"),
+        fields: [
+          {
+            key: "Bonnes pratiques",
+            value: practiceValues,
           },
           {
-            key: appState.language === "fr" ? "Risque si l’info manque" : "Risk if missing",
-            value:
-              appState.language === "fr"
-                ? "Perdre du temps en diagnostic, relancer trop tard le fournisseur, ou annoncer un délai irréaliste au client."
-                : "Lose diagnosis time, chase suppliers too late, or give the customer an unrealistic lead time.",
+            key: "Transmission d’expérience",
+            value: asList(pick(["experience-transfer"], []), noData),
+          },
+        ],
+      },
+      {
+        id: "raw-answers",
+        title: "Réponses brutes",
+        status: allAnswers.length ? "partial" : "needs clarification",
+        editableText: allAnswers.map((item, index) => `${index + 1}. ${item}`).join("\n"),
+        fields: [
+          {
+            key: "Transcription / réponses disponibles",
+            value: allAnswers.length ? allAnswers : noData,
           },
         ],
       },
       {
         id: "open-questions",
-        title: dictionary().openQuestions,
+        title: copy.openQuestions,
         status: openQuestions.length === 0 ? "strong" : "needs clarification",
         editableText: openQuestions.join("\n"),
         fields: [
           {
-            key: appState.language === "fr" ? "À préciser" : "Needs clarification",
+            key: "Questions encore ouvertes",
             value: openQuestions.length
               ? openQuestions
-              : [
-                  appState.language === "fr"
-                    ? "Aucune question ouverte prioritaire."
-                    : "No priority open question.",
-                ],
+              : ["Aucune question ouverte prioritaire."],
           },
         ],
       },
@@ -1022,13 +1577,10 @@
 
   function ensureManagerDemo() {
     if (appState.sessions.length > 0) {
-      appState.showDemoNotice = appState.sessions.every((item) => item.source === "sample");
       return;
     }
 
-    const sample = seedSampleSession(appState.language);
-    appState.sessions = [sample];
-    appState.documents = [generateDocument(sample)];
+    seedCockpitDemo();
     appState.showDemoNotice = true;
     persist();
   }
@@ -1076,6 +1628,7 @@
       const base = appState.speech.transcriptBase.trim();
       appState.draftAnswer = clean ? (base ? `${base}\n${clean}` : clean) : base;
       patchTextareaValue();
+      saveDraftForSession(getCurrentRouteSession(), appState.draftAnswer);
     };
 
     appState.speech.recognition = recognition;
@@ -1115,10 +1668,24 @@
   function render() {
     document.documentElement.lang = appState.language;
     const route = getRoute();
+    const routeKey = `${route.name}:${route.sessionId || route.token || ""}`;
     const root = document.getElementById("app");
     root.innerHTML = `<div class="shell">${renderView(route)}</div>`;
+    if (appState.lastRouteKey !== routeKey) {
+      scrollPageTop();
+      window.requestAnimationFrame(scrollPageTop);
+      appState.lastRouteKey = routeKey;
+    }
     bindCommonEvents();
     bindViewEvents(route);
+  }
+
+  function scrollPageTop() {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    if (typeof window.scrollTo === "function") {
+      window.scrollTo(0, 0);
+    }
   }
 
   function renderView(route) {
@@ -1134,82 +1701,608 @@
   }
 
   function renderLanguageToggle(compact) {
-    const copy = dictionary();
+    return "";
+  }
+
+  function formatDuration(minutes) {
+    const value = Math.max(0, Math.round(minutes || 0));
+    if (value < 60) return `${value} min`;
+    const hours = Math.floor(value / 60);
+    const rest = value % 60;
+    return rest ? `${hours} h ${rest} min` : `${hours} h`;
+  }
+
+  function getThemeAnswerItems(themeId) {
+    return appState.sessions.flatMap((session) =>
+      (session.messages || [])
+        .filter((message) => message.role === "user" && message.sectionId === themeId)
+        .map((message) => ({
+          source: `${session.firstName} ${session.lastName}`.trim() || "Expert",
+          profile: session.profile || session.roleTitle,
+          text: compactSentence(message.content),
+        })),
+    );
+  }
+
+  function getThemeStatus(themeId) {
+    const answers = getThemeAnswerItems(themeId);
+    if (!answers.length) return "Non abordé";
+    if (answers.length === 1) return "Réponse partielle";
+    return "Renseigné";
+  }
+
+  function formatThemeList(themeIds) {
+    if (!themeIds.length) return "Aucun";
+    const titles = themeIds.map(getSectionTitle);
+    if (titles.length <= 3) return titles.join(", ");
+    return `${titles.slice(0, 3).join(", ")} + ${titles.length - 3}`;
+  }
+
+  function formatSessionCount(count) {
+    const value = Math.max(0, Number(count || 0));
+    return `${value} ${value > 1 ? "sessions" : "session"}`;
+  }
+
+  function renderThemeKnowledgeCard(themeId) {
+    const answers = getThemeAnswerItems(themeId);
+    const isActive = appState.activeThemeId === themeId;
     return `
-      <div class="${compact ? "language-switch" : "language-switch"}">
-        <button class="language-pill ${appState.language === "fr" ? "active" : ""}" data-action="set-language" data-language="fr">${copy.languageFr}</button>
-        <button class="language-pill ${appState.language === "en" ? "active" : ""}" data-action="set-language" data-language="en">${copy.languageEn}</button>
+      <button class="theme-card ${isActive ? "active" : ""}" data-action="open-theme-fiche" data-theme-id="${escapeHtml(themeId)}">
+        <span>${escapeHtml(getSectionTitle(themeId))}</span>
+        <strong>${escapeHtml(getThemeStatus(themeId))}</strong>
+      </button>
+    `;
+  }
+
+  function renderActiveThemeFiche() {
+    const copy = dictionary();
+    const themeId = SECTION_ORDER.includes(appState.activeThemeId) ? appState.activeThemeId : SECTION_ORDER[0];
+    const answers = getThemeAnswerItems(themeId);
+    const sources = unique(answers.map((item) => item.source));
+    const learned = answers.slice(0, 3).map((item) => item.text);
+    const openItems = answers.length
+      ? ["Préciser les exceptions et les cas où la règle change.", "Ajouter un exemple client ou atelier supplémentaire si disponible."]
+      : [copy.notCovered];
+
+    return `
+      <section class="section-card theme-fiche">
+        <p class="eyebrow">${copy.expertiseSheetsArea}</p>
+        <h2 class="section-title" style="margin-top:12px;">${escapeHtml(getSectionTitle(themeId))}</h2>
+        <div class="document-field">
+          <p class="doc-key">${copy.learned}</p>
+          ${
+            learned.length
+              ? `<ul class="doc-list">${learned.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+              : `<p class="doc-value">${copy.notCovered}</p>`
+          }
+        </div>
+        <div class="document-field">
+          <p class="doc-key">${copy.qa}</p>
+          ${
+            answers.length
+              ? answers
+                  .slice(0, 3)
+                  .map(
+                    (item) => `
+                      <div class="qa-block">
+                        <p><strong>Question :</strong> ${escapeHtml(getSectionQuestion(themeId))}</p>
+                        <p><strong>Réponse :</strong> ${escapeHtml(item.text)}</p>
+                      </div>
+                    `,
+                  )
+                  .join("")
+              : `<p class="doc-value">${copy.notCovered}</p>`
+          }
+        </div>
+        <div class="document-field">
+          <p class="doc-key">${copy.keyPoints}</p>
+          ${
+            answers.length
+              ? `<ul class="doc-list">${answers.slice(0, 4).map((item) => `<li>${escapeHtml(item.text)}</li>`).join("")}</ul>`
+              : `<p class="doc-value">${copy.notCovered}</p>`
+          }
+        </div>
+        <div class="document-field">
+          <p class="doc-key">${copy.sources}</p>
+          <p class="doc-value">${sources.length ? escapeHtml(sources.join(", ")) : copy.notCovered}</p>
+        </div>
+        <div class="document-field">
+          <p class="doc-key">${copy.openQuestions}</p>
+          <ul class="doc-list">${openItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderCockpit() {
+    const copy = dictionary();
+    ensureManagerDemo();
+    const items = [...appState.sessions].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    const createdSession = appState.createdSessionId ? getSessionById(appState.createdSessionId) : null;
+    const selectedSession = appState.selectedDashboardSessionId ? getSessionById(appState.selectedDashboardSessionId) : null;
+    const selectedThemeIds = selectedSession ? getSessionThemeIds(selectedSession) : [];
+    const selectedAnsweredThemeIds = selectedSession ? getAnsweredThemeIds(selectedSession) : [];
+    const selectedRemainingThemeIds = selectedThemeIds.filter((themeId) => !selectedAnsweredThemeIds.includes(themeId));
+    return `
+      <div class="page-stack cockpit">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">${copy.appName}</p>
+            <h1 class="title">${copy.landingTitle}</h1>
+            <p class="subtitle">${copy.landingSubtitle}</p>
+          </div>
+        </div>
+        <div class="cockpit-grid">
+          <section class="panel cockpit-panel action-card create-action-card ${!appState.showCreateInterview && !createdSession ? "clickable" : ""}" ${
+            !appState.showCreateInterview && !createdSession ? `data-action="show-create-interview"` : ""
+          }>
+            <p class="eyebrow">Action principale</p>
+            <h2 class="section-title" style="margin-top:10px;">${copy.createInterview}</h2>
+            <p class="helper-note" style="margin-top:8px;">Créez un lien à envoyer à un expert pour capturer son savoir-faire.</p>
+            ${
+              createdSession
+                ? `<div class="created-link-box">
+                    <p class="eyebrow">${copy.createdLinkTitle}</p>
+                    <h3 class="card-title" style="margin-top:8px;">${copy.createdLinkTitle}</h3>
+                    <p class="doc-value created-link-value">${escapeHtml(buildLocalExpertLink(createdSession))}</p>
+                    <p class="helper-note">${copy.createdLinkHelp}</p>
+                    <div class="button-row" style="margin-top:14px;">
+                      <button class="button-secondary" data-action="copy-link" data-link="${escapeHtml(buildLocalExpertLink(createdSession))}">${copy.copyLink}</button>
+                      <button class="button-secondary" data-action="test-expert" data-session-id="${escapeHtml(createdSession.id)}">${copy.testExpertPath}</button>
+                      <button class="button" data-action="clear-created-session">Retour au tableau de bord</button>
+                    </div>
+                  </div>`
+                : appState.showCreateInterview
+                ? `<div class="create-interview-form">
+                    <div class="field-grid manager-create-grid">
+                      <div>
+                        <label class="label" for="expert-name">${copy.expertName}</label>
+                        <input id="expert-name" class="field" placeholder="Exemple : Jean Dupont" />
+                      </div>
+                      <div>
+                        <label class="label" for="expert-profile">${copy.profileLabel}</label>
+                        <select id="expert-profile" class="field">
+                          <option>${copy.profileSeller}</option>
+                          <option>${copy.profileWorkshop}</option>
+                          <option>${copy.profileOther}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="topic-picker">
+                      <p class="label">${copy.topicsLabel}</p>
+                      <label class="check-row strong"><input type="checkbox" id="all-themes" checked /> ${copy.allTopics}</label>
+                      <div class="topic-grid">
+                        ${SECTION_ORDER.map(
+                          (id) => `<label class="check-row"><input type="checkbox" class="theme-checkbox" value="${escapeHtml(id)}" checked /> ${escapeHtml(getSectionTitle(id))}</label>`,
+                        ).join("")}
+                      </div>
+                    </div>
+                    <div class="button-row" style="margin-top:18px;">
+                      <button class="button" data-action="submit-create-interview">${copy.createAndShowLink}</button>
+                      <button class="button-secondary" data-action="cancel-create-interview">${copy.cancel}</button>
+                    </div>
+                  </div>`
+                : `<button class="button action-card-button">${copy.createInterview}</button>`
+            }
+          </section>
+          <section class="panel cockpit-panel action-card">
+            <p class="eyebrow">Tableau de bord</p>
+            <h2 class="section-title" style="margin-top:10px;">Entretiens en cours</h2>
+            <p class="helper-note" style="margin-top:8px;">Suivez les entretiens déjà démarrés et consultez les synthèses.</p>
+            <div class="interview-row-list">
+              ${items.map((item) => {
+                const expertName = `${item.firstName} ${item.lastName}`.trim() || "Expert";
+                const isSelected = selectedSession && selectedSession.id === item.id;
+                return `
+                  <button class="interview-row ${isSelected ? "active" : ""}" data-action="select-dashboard-interview" data-session-id="${escapeHtml(item.id)}">
+                    <span>
+                      <strong>${escapeHtml(expertName)}</strong>
+                      <small>${escapeHtml(item.profile || item.roleTitle)}</small>
+                    </span>
+                    <span class="status-pill">${escapeHtml(getDashboardStatus(item))}</span>
+                    <span class="row-progress">${escapeHtml(formatDuration(item.durationMinutes))} · ${escapeHtml(formatSessionCount(item.sessionCount))}</span>
+                  </button>
+                `;
+              }).join("")}
+            </div>
+            ${
+              selectedSession
+                ? `<div class="selected-interview-detail">
+                    <div class="split-line">
+                      <div>
+                        <p class="eyebrow">Entretien sélectionné</p>
+                        <h3 class="card-title" style="margin-top:8px;">${escapeHtml(`${selectedSession.firstName} ${selectedSession.lastName}`.trim() || "Expert")}</h3>
+                        <p class="card-text" style="margin-top:6px;">${escapeHtml(selectedSession.profile || selectedSession.roleTitle)}</p>
+                      </div>
+                      <span class="status-pill">${escapeHtml(getDashboardStatus(selectedSession))}</span>
+                    </div>
+                    <div class="list-metrics">
+                      <div class="stat"><span class="helper-note">${copy.totalTime}</span><strong>${escapeHtml(formatDuration(selectedSession.durationMinutes))}</strong></div>
+                      <div class="stat"><span class="helper-note">${copy.sessionsCount}</span><strong>${selectedSession.sessionCount || 0}</strong></div>
+                      <div class="stat"><span class="helper-note">${copy.lastUpdated}</span><strong style="font-size:18px;">${escapeHtml(formatDate(selectedSession.updatedAt))}</strong></div>
+                    </div>
+                    <p class="manager-link-help"><strong>Thèmes abordés :</strong> ${escapeHtml(formatThemeList(selectedAnsweredThemeIds))}</p>
+                    <p class="manager-link-help"><strong>Thèmes restants :</strong> ${escapeHtml(formatThemeList(selectedRemainingThemeIds))}</p>
+                    <div class="button-row manager-card-actions">
+                      <button class="button-secondary" data-action="copy-link" data-link="${escapeHtml(buildLocalExpertLink(selectedSession))}">${copy.copyLink}</button>
+                      <button class="button-secondary" data-action="test-expert" data-session-id="${escapeHtml(selectedSession.id)}">${copy.testExpertPath}</button>
+                      <button class="button" data-action="open-document" data-session-id="${escapeHtml(selectedSession.id)}">${copy.viewExpertiseSheets}</button>
+                    </div>
+                  </div>`
+                : `<p class="helper-note selection-hint">Cliquez sur un entretien pour afficher les détails et les actions.</p>`
+            }
+          </section>
+        </div>
       </div>
     `;
   }
 
   function renderHome() {
+    return renderCockpit();
+  }
+
+  function renderExpertInterview(route) {
     const copy = dictionary();
+    const session = route.token
+      ? getOrCreateSessionByToken(route.token)
+      : route.sessionId
+        ? getSessionById(route.sessionId)
+        : getActiveSession();
+    const previewBanner = route.preview
+      ? `<div class="preview-banner">
+          <div>
+            <p class="eyebrow">Prévisualisation du parcours expert</p>
+            <p class="helper-note">Ceci est l’écran que verra la personne à qui vous envoyez le lien.</p>
+          </div>
+          <a class="button-subtle" href="${routeLabels.home}">Retour au tableau de bord</a>
+        </div>`
+      : "";
+
+    if (!session) {
+      return `
+        <div class="expert-shell">
+          ${previewBanner}
+          <section class="expert-card centered">
+            <p class="eyebrow">${copy.invalidTokenTitle}</p>
+            <p class="expert-copy">${copy.invalidTokenBody}</p>
+          </section>
+        </div>
+      `;
+    }
+
+    if (session.completedAt) {
+      return `
+        <div class="expert-shell">
+          ${previewBanner}
+          <section class="expert-card centered">
+            <p class="eyebrow">${copy.interviewArea}</p>
+            <h1 class="expert-title">${copy.completedThanksTitle}</h1>
+            <p class="expert-copy">${copy.completedThanksBody}</p>
+          </section>
+        </div>
+      `;
+    }
+
+    if (session.partialSubmittedAt) {
+      return `
+        <div class="expert-shell">
+          ${previewBanner}
+          <section class="expert-card centered">
+            <p class="eyebrow">${copy.interviewArea}</p>
+            <h1 class="expert-title">${copy.partialThanksTitle}</h1>
+            <p class="expert-copy">${copy.partialThanksBody}</p>
+          </section>
+        </div>
+      `;
+    }
+
+    if (appState.finishConfirmationSessionId === session.id) {
+      return `
+        <div class="expert-shell">
+          ${previewBanner}
+          <section class="expert-card centered">
+            <p class="eyebrow">${copy.interviewArea}</p>
+            <h1 class="expert-title">${copy.partialSubmitTitle}</h1>
+            <p class="expert-copy">${copy.partialSubmitBody}</p>
+            <div class="expert-actions">
+              <button class="button-secondary expert-secondary" data-action="continue-later">${copy.continueLater}</button>
+              <button class="button expert-primary" data-action="submit-partial">${copy.submitPartial}</button>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    if (appState.pauseConfirmationSessionId === session.id) {
+      return `
+        <div class="expert-shell">
+          ${previewBanner}
+          <section class="expert-card centered">
+            <p class="eyebrow">${copy.interviewArea}</p>
+            <h1 class="expert-title">${copy.pauseSavedTitle}</h1>
+            <p class="expert-copy">${copy.pauseSavedBody}</p>
+            <div class="expert-actions single">
+              <button class="button expert-primary" data-action="resume-now">${copy.resumeNow}</button>
+            </div>
+            <p class="footer-note">${copy.savedAt} ${escapeHtml(formatTime(session.pausedAt || session.updatedAt))}</p>
+          </section>
+        </div>
+      `;
+    }
+
+    if (!session.startedAt || session.pausedAt) {
+      return `
+        <div class="expert-shell">
+          ${previewBanner}
+          <section class="expert-card centered">
+            <p class="eyebrow">${copy.interviewArea}</p>
+            <h1 class="expert-title">${copy.expertIntroTitle}</h1>
+            <p class="expert-copy">${copy.expertIntroBody}</p>
+            <p class="resume-banner">${session.pausedAt || session.answeredPromptCount > 0 ? copy.resumeNotice : copy.expertIntroReassurance}</p>
+            <div class="expert-actions single">
+              <button class="button expert-primary" data-action="start-interview">
+                ${session.pausedAt || session.answeredPromptCount > 0 ? copy.resumeExpertInterview : copy.startExpertInterview}
+              </button>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    if (session.draftAnswer && !appState.draftAnswer) {
+      appState.draftAnswer = session.draftAnswer;
+    }
+
+    const themeIds = getSessionThemeIds(session);
+    const activeQuestion = [...session.messages]
+      .reverse()
+      .find((item) => item.role === "assistant" && item.sectionId === session.currentSectionId);
+    const currentIndex = Math.max(0, themeIds.indexOf(session.currentSectionId));
+    const totalQuestions = themeIds.length;
+    const questionNumber = Math.min(totalQuestions, currentIndex + 1);
+    const answeredCount = getAnsweredThemeCount(session);
+    const progressPercent = Math.round((answeredCount / totalQuestions) * 100);
+
+    return `
+      <div class="expert-shell">
+        ${previewBanner}
+        <section class="expert-card question-focus">
+          <div class="expert-progress-line">
+            <span>${copy.questionCount} ${questionNumber} sur ${totalQuestions}</span>
+            <span>${answeredCount}/${totalQuestions} ${copy.answeredQuestions}</span>
+          </div>
+          <div class="progress-meter expert-meter"><span style="width:${Math.max(6, progressPercent)}%;"></span></div>
+          <p class="question-meta">${copy.themeLabel} : ${escapeHtml(getSectionTitle(session.currentSectionId))}</p>
+          <h1 class="expert-question">${escapeHtml(activeQuestion ? activeQuestion.content : getSectionQuestion(session.currentSectionId))}</h1>
+          <div class="dictaphone-panel simple">
+            <button class="${appState.speech.listening ? "button microphone-button live" : "button microphone-button"}" data-action="toggle-microphone">
+              ${appState.speech.listening ? copy.stopMicrophone : copy.startMicrophone}
+            </button>
+            <p class="micro-status">
+              <span class="dot ${appState.speech.listening ? "live" : ""}"></span>
+              ${appState.speech.listening ? copy.micRecording : copy.micStopped}
+            </p>
+          </div>
+          <div class="transcription-block">
+            <label class="label" for="answer-input">${copy.yourAnswer}</label>
+            <textarea id="answer-input" class="textarea expert-textarea" placeholder="${escapeHtml(copy.speechHint)}">${escapeHtml(appState.draftAnswer)}</textarea>
+            <p class="helper-note">${copy.submitHint}</p>
+          </div>
+          <div class="expert-actions">
+            <button class="button expert-primary" data-action="submit-answer">${copy.sendAnswer}</button>
+            <button class="button-secondary expert-secondary" data-action="pause-interview">${copy.pauseInterview}</button>
+          </div>
+          <p class="footer-note" id="save-status">${copy.savedAt} ${escapeHtml(formatTime(session.draftUpdatedAt || session.updatedAt))} · ${copy.saveNotice}</p>
+          <button class="text-link expert-finish" data-action="finish-interview">${copy.finishInterview}</button>
+        </section>
+      </div>
+    `;
+  }
+
+  function getAnsweredThemeIds(session) {
+    const themeIds = getSessionThemeIds(session);
+    return themeIds.filter((themeId) =>
+      (session.messages || []).some((message) => message.role === "user" && message.sectionId === themeId),
+    );
+  }
+
+  function renderSimpleList(values, fallback) {
+    const items = values && values.length ? values : [fallback];
+    return `<ul class="doc-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+  }
+
+  function getThemeAnswersForSession(session, themeId) {
+    return (session.messages || [])
+      .filter((message) => message.role === "user" && message.sectionId === themeId)
+      .map((message) => compactSentence(message.content))
+      .filter(Boolean);
+  }
+
+  function getThemeFicheStatus(session, themeId) {
+    const answers = getThemeAnswersForSession(session, themeId);
+    if (!answers.length) return "Non abordé";
+    const totalLength = answers.join(" ").length;
+    return answers.length > 1 || totalLength > 260 ? "Enrichi" : "Réponse partielle";
+  }
+
+  function getThemePreview(session, themeId) {
+    const answer = getThemeAnswersForSession(session, themeId)[0];
+    if (!answer) return "Cette fiche sera complétée avec les prochaines réponses.";
+    return answer.length > 132 ? `${answer.slice(0, 129)}...` : answer;
+  }
+
+  function getThemeOpenQuestions(answers) {
+    const combined = answers.join(" ");
+    const gaps = [];
+    if (!answers.length) {
+      return ["Attendre une première réponse de l’expert sur ce thème."];
+    }
+    if (!combined.match(/\b(exemple|cas client|client|machine|atelier)\b/i)) {
+      gaps.push("Ajouter un exemple concret ou un cas client si possible.");
+    }
+    if (!combined.match(/\b(d’abord|premier|ensuite|puis|ordre|avant|après)\b/i)) {
+      gaps.push("Préciser l’ordre des vérifications ou du raisonnement.");
+    }
+    if (!combined.match(/\b(erreur|risque|sécurité|pression|alerte|trompe)\b/i)) {
+      gaps.push("Clarifier les erreurs ou risques à éviter.");
+    }
+    return gaps.length ? gaps : ["Aucune question ouverte prioritaire pour le moment."];
+  }
+
+  function getThemeExamples(answers) {
+    return answers.filter((answer) => /\b(exemple|cas client|client|machine|atelier|fuite)\b/i.test(answer));
+  }
+
+  function getThemeNotes(document, themeId) {
+    return document?.themeNotes?.[themeId] || "";
+  }
+
+  function renderThemeFicheCard(session, themeId) {
+    return `
+      <article class="theme-card synthesis-fiche-card">
+        <div>
+          <span>${escapeHtml(getSectionTitle(themeId))}</span>
+          <p class="helper-note fiche-preview">${escapeHtml(getThemePreview(session, themeId))}</p>
+        </div>
+        <strong>${escapeHtml(getThemeFicheStatus(session, themeId))}</strong>
+        <button class="button-secondary" data-action="open-doc-section" data-section-id="${escapeHtml(themeId)}">Ouvrir la fiche</button>
+      </article>
+    `;
+  }
+
+  function renderThemeFicheDetail(session, document, themeId) {
+    const copy = dictionary();
+    const status = getThemeFicheStatus(session, themeId);
+    const answers = getThemeAnswersForSession(session, themeId);
+    const examples = getThemeExamples(answers);
+    const openQuestions = getThemeOpenQuestions(answers);
+    const notes = getThemeNotes(document, themeId);
+    const hasContent = answers.length > 0;
+
     return `
       <div class="page-stack">
-        <div class="topbar">
+        <div class="document-header">
           <div>
-            <p class="eyebrow">${copy.landingEyebrow}</p>
-            <p class="app-name">${copy.appName}</p>
+            <p class="eyebrow">Fiche technique</p>
+            <h1 class="section-title" style="margin-top:14px;font-size:48px;">${escapeHtml(getSectionTitle(themeId))}</h1>
+            <p class="helper-note" style="margin-top:8px;">${escapeHtml(`${session.firstName} ${session.lastName}`.trim() || "Expert NumerHyd")}</p>
           </div>
-          ${renderLanguageToggle(false)}
-        </div>
-        <div>
-          <h1 class="title">${copy.landingTitle}</h1>
-          <p class="subtitle">${copy.landingSubtitle}</p>
-          <div class="hero-grid">
-            <section class="card">
-              <p class="eyebrow">${copy.interviewArea}</p>
-              <p class="card-text" style="margin-top:14px;font-size:19px;">${copy.interviewSurface}</p>
-              <div class="card-actions" style="margin-top:22px;">
-                <button class="button full" data-action="go-interview">${copy.startInterview}</button>
-              </div>
-            </section>
-            <section class="card">
-              <p class="eyebrow">${copy.managerArea}</p>
-              <p class="card-text" style="margin-top:14px;font-size:19px;">${copy.managerSurface}</p>
-              <div class="card-actions" style="margin-top:22px;">
-                <button class="button-secondary full" data-action="go-manager">${copy.openManager}</button>
-              </div>
-            </section>
+          <div class="header-actions">
+            <button class="button-subtle" data-action="back-synthesis">Retour à la synthèse</button>
+            <button class="button-secondary" data-action="copy-link" data-link="${escapeHtml(buildLocalExpertLink(session))}">${copy.copyLink}</button>
+            <button class="button" data-action="export-pdf">${copy.exportPdf}</button>
           </div>
         </div>
+        <section class="section-card synthesis-card">
+          <p class="eyebrow">${escapeHtml(status)}</p>
+          <h2 class="section-title" style="margin-top:12px;">${escapeHtml(getSectionTitle(themeId))}</h2>
+          ${
+            hasContent
+              ? `
+                <div class="document-field">
+                  <p class="doc-key">Connaissances capturées</p>
+                  ${renderSimpleList(answers, "Cette fiche sera complétée lorsque l’expert aura répondu à plus de questions sur ce thème.")}
+                </div>
+                <div class="document-field">
+                  <p class="doc-key">Raisonnement / heuristiques</p>
+                  ${renderSimpleList(answers, "À compléter.")}
+                </div>
+                <div class="document-field">
+                  <p class="doc-key">Exemples ou cas mentionnés</p>
+                  ${renderSimpleList(examples, "Aucun exemple précis n’a encore été repéré dans cette fiche.")}
+                </div>
+                <div class="document-field">
+                  <p class="doc-key">Questions ouvertes</p>
+                  ${renderSimpleList(openQuestions, "Aucune question ouverte prioritaire pour le moment.")}
+                </div>
+              `
+              : `<div class="empty-inline">Cette fiche sera complétée lorsque l’expert aura répondu à plus de questions sur ce thème.</div>`
+          }
+          <div class="document-field">
+            <p class="doc-key">Notes éditables</p>
+            <p class="helper-note" style="margin-bottom:12px;">Ajoutez une précision ou une correction interne si nécessaire.</p>
+            <textarea class="textarea doc-text" id="doc-edit" data-theme-id="${escapeHtml(themeId)}">${escapeHtml(notes)}</textarea>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
+  function renderThemeFicheCards(session) {
+    return `
+      <div class="theme-card-list synthesis-fiche-list">
+        ${getSessionThemeIds(session).map((themeId) => renderThemeFicheCard(session, themeId)).join("")}
       </div>
     `;
   }
 
   function renderInterview(route) {
-    const copy = dictionary();
-    const session = route.sessionId ? getSessionById(route.sessionId) : getActiveSession();
+    return renderExpertInterview(route);
 
-    if (!session) {
+    const copy = dictionary();
+    const session = route.token
+      ? getOrCreateSessionByToken(route.token)
+      : route.sessionId
+        ? getSessionById(route.sessionId)
+        : getActiveSession();
+    const invalidToken = Boolean(route.token) && !session;
+    const needsIdentity =
+      Boolean(route.token) &&
+      session &&
+      !session.firstName &&
+      !session.lastName &&
+      session.answeredPromptCount === 0;
+
+    if (invalidToken) {
       return `
         <div class="page-stack">
           <div class="split-topbar">
             <div>
-              <a href="${routeLabels.home}" class="small-link">${copy.backHome}</a>
+              <a href="${route.token ? "/" : routeLabels.home}" class="small-link">${copy.backHome}</a>
               <p class="eyebrow" style="margin-top:12px;">${copy.interviewArea}</p>
             </div>
             ${renderLanguageToggle(true)}
           </div>
-          <section class="card" style="max-width:760px;">
+          <section class="card form-card">
+            <p class="eyebrow">${copy.invalidTokenTitle}</p>
+            <p class="card-text" style="margin-top:14px;">${copy.invalidTokenBody}</p>
+          </section>
+        </div>
+      `;
+    }
+
+    if (!session || needsIdentity) {
+      return `
+        <div class="page-stack">
+          <div class="split-topbar">
+            <div>
+              <a href="${route.token ? "/" : routeLabels.home}" class="small-link">${copy.backHome}</a>
+              <p class="eyebrow" style="margin-top:12px;">${copy.interviewArea}</p>
+            </div>
+            ${renderLanguageToggle(true)}
+          </div>
+          <section class="card form-card">
             <p class="eyebrow">${copy.startTitle}</p>
             <div style="margin-top:22px;" class="field-grid">
               <div>
                 <label class="label" for="first-name">${copy.firstName}</label>
-                <input id="first-name" class="field" />
+                <input id="first-name" class="field" value="${escapeHtml(session?.firstName || "")}" />
               </div>
               <div>
                 <label class="label" for="last-name">${copy.lastName}</label>
-                <input id="last-name" class="field" />
+                <input id="last-name" class="field" value="${escapeHtml(session?.lastName || "")}" />
               </div>
             </div>
-            <div class="card-actions" style="margin-top:22px;">
-              <button class="button" data-action="start-interview">${copy.begin}</button>
+            <div class="card-actions" style="margin-top:24px;">
+              <button class="button full" data-action="start-interview">${copy.begin}</button>
             </div>
           </section>
         </div>
       `;
+    }
+
+    if (session.draftAnswer && !appState.draftAnswer) {
+      appState.draftAnswer = session.draftAnswer;
     }
 
     const activeQuestion = [...session.messages].reverse().find((item) => item.role === "assistant");
@@ -1221,28 +2314,42 @@
       <div class="page-stack">
         <div class="split-topbar">
           <div>
-            <a href="${routeLabels.home}" class="small-link">${copy.backHome}</a>
+            <a href="${route.token ? "/" : routeLabels.home}" class="small-link">${copy.backHome}</a>
             <p class="eyebrow" style="margin-top:12px;">${copy.interviewArea}</p>
             <p class="helper-note" style="margin-top:10px;">${copy.captureNote}</p>
+            ${
+              session.answeredPromptCount > 0 || session.pausedAt
+                ? `<p class="resume-banner">${copy.resumeNotice}</p>`
+                : ""
+            }
           </div>
           ${renderLanguageToggle(true)}
         </div>
         <div class="two-col">
           <div class="stack">
-            <div class="section-tracker">
-              ${session.sections
-                .map(
-                  (section) => `<span class="tracker-pill ${section.status}">${escapeHtml(
-                    getSectionTitle(section.id),
-                  )}</span>`,
-                )
-                .join("")}
-            </div>
+            <section class="tracker-panel">
+              <div class="tracker-head">
+                <p class="eyebrow">${copy.interviewSteps}</p>
+                <span class="helper-note">${session.completionPercent}%</span>
+              </div>
+              <div class="section-tracker">
+                ${session.sections
+                  .map(
+                    (section) => `<span class="tracker-pill ${section.status}">${escapeHtml(
+                      getSectionTitle(section.id),
+                    )}</span>`,
+                  )
+                  .join("")}
+              </div>
+            </section>
             <section class="question-card">
               <p class="eyebrow">${copy.currentQuestion}</p>
               <h1 class="question-title" style="margin-top:18px;">${escapeHtml(
                 activeQuestion ? activeQuestion.content : getSectionQuestion(session.currentSectionId),
               )}</h1>
+              <p class="question-meta">${copy.currentFocus} : ${escapeHtml(
+                getSectionTitle(session.currentSectionId),
+              )}</p>
               ${
                 latestUser
                   ? `<div style="margin-top:22px;">
@@ -1253,7 +2360,16 @@
               }
             </section>
             <section class="panel">
-              <div class="mode-row" style="justify-content:space-between;align-items:center;">
+              <div class="dictaphone-panel">
+                <div>
+                  <p class="eyebrow">Dictaphone métier</p>
+                  <p class="helper-note" style="margin-top:8px;">${copy.speechHint}</p>
+                </div>
+                <button class="${appState.speech.listening ? "button microphone-button live" : "button microphone-button"}" data-action="toggle-microphone">
+                  ${appState.speech.listening ? copy.stopMicrophone : copy.startMicrophone}
+                </button>
+              </div>
+              <div class="mode-row" style="justify-content:space-between;align-items:center;margin-top:18px;">
                 <label class="label" for="answer-input" style="margin:0;">${copy.yourAnswer}</label>
                 <div class="mode-row" style="align-items:center;">
                   <span class="helper-note">${copy.answerMode}</span>
@@ -1267,10 +2383,8 @@
                 appState.answerMode === "speak"
                   ? `<div class="microphone-row" style="margin-top:16px;">
                       <div class="inline-actions" style="align-items:center;">
-                        <button class="${appState.speech.listening ? "button" : "button-secondary"}" data-action="toggle-microphone">
-                          ${appState.speech.listening ? copy.stopMicrophone : copy.startMicrophone}
-                        </button>
                         <span class="dot ${appState.speech.listening ? "live" : ""}"></span>
+                        <strong>${appState.speech.listening ? copy.speechListening : copy.speechStopped}</strong>
                       </div>
                       <p class="helper-note">${getSpeechStatusLabel()}</p>
                     </div>`
@@ -1284,7 +2398,6 @@
               <div class="split-line" style="margin-top:16px;">
                 <p class="helper-note">${copy.submitHint}</p>
                 <div class="button-row">
-                  <button class="button-secondary" data-action="reset-session">${copy.reset}</button>
                   <button class="button" data-action="submit-answer">${copy.sendAnswer}</button>
                 </div>
               </div>
@@ -1294,34 +2407,36 @@
             </div>
           </div>
           <aside class="stack">
-            <section class="panel">
+            <section class="panel panel-compact">
               <p class="eyebrow">${copy.progress}</p>
               <div class="progress-meter" style="margin-top:14px;"><span style="width:${Math.max(
                 6,
                 session.completionPercent,
               )}%;"></span></div>
-              <div class="stats-grid" style="margin-top:18px;">
-                <div class="stat">
+              <div class="summary-list">
+                <div class="summary-row">
                   <span class="helper-note">${copy.progress}</span>
                   <strong>${session.completionPercent}%</strong>
                 </div>
-                <div class="stat">
+                <div class="summary-row">
                   <span class="helper-note">${copy.currentFocus}</span>
-                  <strong style="font-size:18px;">${escapeHtml(
-                    getSectionTitle(session.currentSectionId),
-                  )}</strong>
+                  <strong>${escapeHtml(getSectionTitle(session.currentSectionId))}</strong>
                 </div>
-                <div class="stat">
+                <div class="summary-row">
                   <span class="helper-note">${copy.nextStep}</span>
-                  <strong style="font-size:18px;">${escapeHtml(
+                  <strong>${escapeHtml(
                     nextSection ? getSectionTitle(nextSection) : copy.finishInterview,
                   )}</strong>
                 </div>
               </div>
-              <div class="button-row" style="margin-top:18px;">
+              <div class="panel-divider"></div>
+              <div class="button-row stacked flush">
                 <button class="button full" data-action="finish-interview">${copy.finishInterview}</button>
+                <button class="button-secondary full" data-action="pause-interview">${copy.pauseInterview}</button>
+                <button class="button-secondary full" data-action="reset-session">${copy.reset}</button>
               </div>
-              <p class="footer-note">${copy.saveNotice}</p>
+              <p class="footer-note" id="save-status">${copy.savedAt} ${escapeHtml(formatTime(session.draftUpdatedAt || session.updatedAt))} · ${copy.saveNotice}</p>
+              <p class="footer-note">${copy.localDemoNotice}</p>
             </section>
           </aside>
         </div>
@@ -1335,155 +2450,51 @@
     const session = route.sessionId ? getSessionById(route.sessionId) : null;
 
     if (!session) {
-      const items = [...appState.sessions].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-      return `
-        <div class="page-stack">
-          <div class="document-header">
-            <div>
-              <p class="eyebrow">${copy.managerArea}</p>
-              <h1 class="section-title" style="margin-top:14px;font-size:52px;">${copy.managerTitle}</h1>
-              <p class="subtitle" style="font-size:22px;margin-top:14px;">${copy.managerSubtitle}</p>
-            </div>
-            <div class="header-actions">
-              ${renderLanguageToggle(false)}
-              <a class="button-subtle" href="${routeLabels.home}">${copy.backHome}</a>
-            </div>
-          </div>
-          ${
-            appState.showDemoNotice
-              ? `<div class="demo-note"><strong>${copy.demoLoaded}</strong><div class="helper-note" style="margin-top:8px;">${copy.demoBody}</div></div>`
-              : ""
-          }
-          <div class="dashboard-list">
-            ${
-              items.length
-                ? items
-                    .map((item) => {
-                      const doneSections = item.sections.filter((section) => section.status === "complete").length;
-                      const statusLabel =
-                        item.completionPercent >= 100
-                          ? copy.statusDone
-                          : item.answeredPromptCount > 0
-                            ? copy.statusProgress
-                            : copy.statusNotStarted;
-                      return `
-                        <button class="list-item" data-action="open-document" data-session-id="${item.id}">
-                          <div class="split-line">
-                            <div>
-                              <h2 class="card-title">${escapeHtml(
-                                `${item.firstName} ${item.lastName}`.trim() || item.roleTitle,
-                              )}</h2>
-                              <p class="card-text" style="margin-top:8px;">${escapeHtml(item.roleTitle)}</p>
-                            </div>
-                            <span class="status-pill">${statusLabel}</span>
-                          </div>
-                          <div class="list-metrics">
-                            <div class="stat">
-                              <span class="helper-note">${copy.progressLabel}</span>
-                              <strong>${item.completionPercent}%</strong>
-                            </div>
-                            <div class="stat">
-                              <span class="helper-note">${copy.sectionsDone}</span>
-                              <strong>${doneSections}/${item.sections.length}</strong>
-                            </div>
-                            <div class="stat">
-                              <span class="helper-note">${copy.lastUpdated}</span>
-                              <strong style="font-size:18px;">${escapeHtml(formatDate(item.updatedAt))}</strong>
-                            </div>
-                            <div class="stat">
-                              <span class="helper-note">${copy.openFile}</span>
-                              <strong style="font-size:18px;">→</strong>
-                            </div>
-                          </div>
-                        </button>
-                      `;
-                    })
-                    .join("")
-                : `<div class="empty-state card"><p>${copy.managerEmpty}</p><div class="card-actions" style="justify-content:center;margin-top:16px;"><button class="button" data-action="load-sample">${copy.managerEmptyAction}</button></div></div>`
-            }
-          </div>
-        </div>
-      `;
+      return renderCockpit();
     }
 
-    const document = loadDocument(session.id) || generateDocument(session);
-    saveDocument(document);
-    const activeSectionId = appState.currentDocId && document.sections.some((item) => item.id === appState.currentDocId)
+    const expertiseDoc = loadDocument(session.id) || generateDocument(session);
+    saveDocument(expertiseDoc);
+    const selectedThemeIds = getSessionThemeIds(session);
+    const activeThemeId = appState.currentDocId && selectedThemeIds.includes(appState.currentDocId)
       ? appState.currentDocId
-      : document.sections[0].id;
-    appState.currentDocId = activeSectionId;
-    const activeSection = document.sections.find((item) => item.id === activeSectionId);
+      : null;
+
+    if (activeThemeId) {
+      return renderThemeFicheDetail(session, expertiseDoc, activeThemeId);
+    }
 
     return `
       <div class="page-stack">
         <div class="document-header">
           <div>
             <p class="eyebrow">${copy.managerArea}</p>
-            <h1 class="section-title" style="margin-top:14px;font-size:52px;">${copy.docTitle}</h1>
-            <p class="subtitle" style="font-size:22px;margin-top:14px;">${escapeHtml(
-              `${session.firstName} ${session.lastName}`.trim() || document.subtitle,
-            )}</p>
-            <p class="helper-note" style="margin-top:8px;">${copy.docSubtitle}</p>
+            <h1 class="section-title" style="margin-top:14px;font-size:52px;">Synthèse de l’entretien — ${escapeHtml(
+              `${session.firstName} ${session.lastName}`.trim() || expertiseDoc.subtitle,
+            )}</h1>
+            <p class="subtitle" style="font-size:22px;margin-top:14px;">${escapeHtml(session.profile || session.roleTitle)}</p>
+            <p class="helper-note" style="margin-top:8px;">${escapeHtml(getSessionStatus(session))}</p>
           </div>
           <div class="header-actions">
             ${renderLanguageToggle(false)}
-            <a class="button-subtle" href="${routeLabels.home}">${copy.backHome}</a>
-            <a class="button-subtle" href="${routeLabels.manager}">${copy.backToDashboard}</a>
+            <a class="button-subtle" href="${routeLabels.home}">Retour au tableau de bord</a>
+            <button class="button-secondary" data-action="copy-link" data-link="${escapeHtml(buildLocalExpertLink(session))}">${copy.copyLink}</button>
             <button class="button" data-action="export-pdf">${copy.exportPdf}</button>
           </div>
         </div>
-        <div class="doc-layout">
-          <aside class="stack">
-            <section class="panel">
-              <p class="eyebrow">${copy.sessionSummary}</p>
-              <h2 class="section-title" style="margin-top:14px;">${escapeHtml(document.sessionSummary.mainRole)}</h2>
-              <div class="stats-grid" style="margin-top:16px;">
-                <div class="stat"><span class="helper-note">${copy.responsibilities}</span><strong>${document.sessionSummary.responsibilities.length}</strong></div>
-                <div class="stat"><span class="helper-note">${copy.issues}</span><strong>${document.sessionSummary.issues.length}</strong></div>
-                <div class="stat"><span class="helper-note">${copy.tools}</span><strong>${document.sessionSummary.tools.length}</strong></div>
-              </div>
-              <div class="document-field">
-                <p class="doc-key">${copy.keyContacts}</p>
-                <p class="doc-value">${escapeHtml(
-                  document.sessionSummary.contacts.length
-                    ? document.sessionSummary.contacts.join(", ")
-                    : copy.noContacts,
-                )}</p>
-              </div>
-            </section>
-            <section class="panel">
-              <p class="eyebrow">${copy.people}</p>
-              <div class="section-nav" style="margin-top:14px;">
-                ${document.sections
-                  .map(
-                    (section) => `
-                      <button class="nav-item ${section.id === activeSection.id ? "active" : ""}" data-action="open-doc-section" data-section-id="${section.id}">
-                        <span>${escapeHtml(section.title)}</span>
-                        <span>${escapeHtml(getConfidenceLabel(section.status))}</span>
-                      </button>`,
-                  )
-                  .join("")}
-              </div>
-            </section>
-          </aside>
-          <section class="section-card">
-            <p class="eyebrow">${escapeHtml(getConfidenceLabel(activeSection.status))}</p>
-            <h2 class="section-title" style="margin-top:14px;">${escapeHtml(activeSection.title)}</h2>
-            ${activeSection.fields
-              .map((field) => {
-                const content = Array.isArray(field.value)
-                  ? `<ul class="doc-list">${field.value.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
-                  : `<p class="doc-value">${escapeHtml(field.value)}</p>`;
-                return `<div class="document-field"><p class="doc-key">${escapeHtml(field.key)}</p>${content}</div>`;
-              })
-              .join("")}
-            <div class="document-field">
-              <p class="doc-key">${copy.editableDraft}</p>
-              <p class="helper-note" style="margin-bottom:12px;">${copy.editableHelp}</p>
-              <textarea class="textarea doc-text" id="doc-edit">${escapeHtml(activeSection.editableText || "")}</textarea>
-            </div>
-          </section>
+        <div class="stats-grid synthesis-stats">
+          <div class="stat"><span class="helper-note">Statut</span><strong>${escapeHtml(getSessionStatus(session))}</strong></div>
+          <div class="stat"><span class="helper-note">Fiches commencées</span><strong>${getAnsweredThemeCount(session)}/${selectedThemeIds.length}</strong></div>
+          <div class="stat"><span class="helper-note">${copy.sessionsCount}</span><strong>${session.sessionCount || 0}</strong></div>
+          <div class="stat"><span class="helper-note">${copy.totalTime}</span><strong>${escapeHtml(formatDuration(session.durationMinutes))}</strong></div>
+          <div class="stat"><span class="helper-note">${copy.lastUpdated}</span><strong style="font-size:20px;">${escapeHtml(formatDate(session.updatedAt))}</strong></div>
         </div>
+        <section class="section-card synthesis-card">
+          <p class="eyebrow">${copy.docTitle}</p>
+          <h2 class="section-title" style="margin-top:12px;">Fiches techniques</h2>
+          <p class="helper-note" style="margin-top:8px;">Chaque fiche correspond à un thème abordé pendant l’entretien.</p>
+          ${renderThemeFicheCards(session)}
+        </section>
       </div>
     `;
   }
@@ -1501,36 +2512,25 @@
   }
 
   function getInterviewHints(sectionId) {
-    if (appState.language === "fr") {
-      switch (sectionId) {
-        case "role-overview":
-          return ["Expliquez le poste simplement", "Donnez un exemple réel"];
-        case "recurring-responsibilities":
-          return ["Dites ce qui revient souvent", "Mentionnez ce qui déclenche l’action"];
-        case "step-by-step-tasks":
-          return ["Décrivez les étapes", "Ajoutez les contrôles avant de promettre"];
-        case "problem-solving":
-          return ["Parlez des signaux d’alerte", "Dites ce que vous vérifiez d’abord"];
-        case "tools-files-contacts":
-          return ["Précisez où c’est stocké", "Dites qui dépend de cette information"];
-        default:
-          return ["Ce qu’un remplaçant doit comprendre", "Ce qui ne s’apprend qu’avec l’expérience"];
-      }
-    }
-
     switch (sectionId) {
-      case "role-overview":
-        return ["Explain the role simply", "Give a real example"];
-      case "recurring-responsibilities":
-        return ["Say what comes back often", "Mention what triggers the work"];
-      case "step-by-step-tasks":
-        return ["Describe the steps", "Add the checks before committing"];
-      case "problem-solving":
-        return ["Talk about warning signs", "Say what you check first"];
-      case "tools-files-contacts":
-        return ["Be specific about location", "Say who depends on it"];
+      case "drilled-block-design":
+        return ["Décrivez votre premier réflexe", "Mentionnez les contraintes qui changent tout"];
+      case "schematics-client-need":
+        return ["Distinguez besoin réel et solution demandée", "Parlez de la séquence machine"];
+      case "material-choices":
+        return ["Expliquez le critère de choix", "Dites quand vous refusez une option"];
+      case "pressure-safety":
+        return ["Parlez des risques", "Dites ce que vous contrôlez en premier"];
+      case "leak-diagnosis":
+        return ["Localisez la fuite", "Précisez froid, chaud, repos ou pression"];
+      case "troubleshooting-order":
+        return ["Donnez l’ordre des vérifications", "Commencez par le plus simple"];
+      case "customer-cases":
+        return ["Racontez un cas réel", "Dites ce que ce cas vous a appris"];
+      case "frequent-errors":
+        return ["Pensez à un débutant", "Nommez les pièges classiques"];
       default:
-        return ["What a replacement must understand", "What only comes with experience"];
+        return ["Donnez un exemple concret", "Expliquez votre raisonnement terrain"];
     }
   }
 
@@ -1569,10 +2569,24 @@
 
     document.querySelectorAll("[data-action='go-interview']").forEach((button) => {
       button.addEventListener("click", () => {
-        appState.activeSessionId = null;
+        const session = createBlankSession("Expert", "NumerHyd");
+        session.roleTitle = "Expertise hydraulique NumerHyd";
+        saveSession(session);
+        saveDocument(generateDocument(session));
         appState.draftAnswer = "";
         persist();
-        setHash(routeLabels.interview);
+        setHash(`#/interview/${session.id}`);
+      });
+    });
+
+    document.querySelectorAll("[data-action='resume-active']").forEach((button) => {
+      button.addEventListener("click", () => {
+        const sessionId = button.getAttribute("data-session-id");
+        if (sessionId) {
+          appState.activeSessionId = sessionId;
+          persist();
+          setHash(`#/interview/${sessionId}`);
+        }
       });
     });
 
@@ -1586,31 +2600,139 @@
       bindInterviewEvents(route);
     }
 
-    if (route.name === "manager") {
+    if (route.name === "manager" || route.name === "home") {
       bindManagerEvents(route);
     }
   }
 
   function bindInterviewEvents(route) {
+    const resolveInterviewSession = () =>
+      route.token
+        ? getOrCreateSessionByToken(route.token)
+        : route.sessionId
+          ? getSessionById(route.sessionId)
+          : getActiveSession();
+
+    document.querySelectorAll("[data-action='resume-now']").forEach((button) => {
+      button.addEventListener("click", () => {
+        const session = resolveInterviewSession();
+        if (!session) return;
+        appState.pauseConfirmationSessionId = null;
+        appState.finishConfirmationSessionId = null;
+        saveSession({
+          ...session,
+          startedAt: session.startedAt || new Date().toISOString(),
+          sessionCount: session.pausedAt ? (session.sessionCount || 1) + 1 : Math.max(1, session.sessionCount || 0),
+          pausedAt: null,
+          updatedAt: new Date().toISOString(),
+        });
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-action='continue-later']").forEach((button) => {
+      button.addEventListener("click", () => {
+        const session = resolveInterviewSession();
+        if (!session) return;
+        const now = new Date().toISOString();
+        appState.finishConfirmationSessionId = null;
+        appState.pauseConfirmationSessionId = session.id;
+        saveSession({
+          ...session,
+          pausedAt: now,
+          updatedAt: now,
+        });
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-action='submit-partial']").forEach((button) => {
+      button.addEventListener("click", () => {
+        const session = resolveInterviewSession();
+        if (!session) return;
+        const now = new Date().toISOString();
+        const submittedSession = {
+          ...session,
+          draftAnswer: "",
+          pausedAt: null,
+          partialSubmittedAt: now,
+          finishedAt: now,
+          updatedAt: now,
+        };
+        appState.finishConfirmationSessionId = null;
+        appState.pauseConfirmationSessionId = null;
+        appState.draftAnswer = "";
+        saveSession(submittedSession);
+        saveDocument(generateDocument(submittedSession));
+        render();
+      });
+    });
+
     const startButton = document.querySelector("[data-action='start-interview']");
     if (startButton) {
       startButton.addEventListener("click", () => {
-        const firstName = document.getElementById("first-name").value.trim();
-        const lastName = document.getElementById("last-name").value.trim();
-        const session = createBlankSession(firstName, lastName);
+        const firstNameField = document.getElementById("first-name");
+        const lastNameField = document.getElementById("last-name");
+        const firstName = firstNameField ? firstNameField.value.trim() : "";
+        const lastName = lastNameField ? lastNameField.value.trim() : "";
+        let session;
+
+        if (route.token) {
+          session = getOrCreateSessionByToken(route.token);
+          if (!session) {
+            return;
+          }
+
+          session = {
+            ...session,
+            firstName,
+            lastName,
+            roleTitle: "Expertise hydraulique NumerHyd",
+            updatedAt: new Date().toISOString(),
+          };
+          saveSession(session, false);
+        } else {
+          session = route.sessionId
+            ? getSessionById(route.sessionId)
+            : getActiveSession() || createBlankSession("Expert", "NumerHyd");
+          if (!session) {
+            session = createBlankSession("Expert", "NumerHyd");
+          }
+        }
+
+        session = {
+          ...session,
+          firstName: firstName || session.firstName || "Expert",
+          lastName: lastName || session.lastName || "NumerHyd",
+          roleTitle: session.roleTitle || "Expertise hydraulique NumerHyd",
+          startedAt: session.startedAt || new Date().toISOString(),
+          sessionCount: session.startedAt && session.pausedAt ? (session.sessionCount || 1) + 1 : Math.max(1, session.sessionCount || 0),
+          pausedAt: null,
+          updatedAt: new Date().toISOString(),
+        };
+        appState.pauseConfirmationSessionId = null;
         saveSession(session);
         saveDocument(generateDocument(session));
         appState.draftAnswer = "";
-        setHash(`#/interview/${session.id}`);
+        if (route.token) {
+          render();
+        } else {
+          setHash(`#/interview/${session.id}`);
+        }
       });
       return;
     }
 
-    const session = route.sessionId ? getSessionById(route.sessionId) : getActiveSession();
+    const session = route.token
+      ? getOrCreateSessionByToken(route.token)
+      : route.sessionId
+        ? getSessionById(route.sessionId)
+        : getActiveSession();
     const textarea = document.getElementById("answer-input");
     if (textarea) {
       textarea.addEventListener("input", (event) => {
         appState.draftAnswer = event.target.value;
+        saveDraftForSession(session, appState.draftAnswer);
       });
       textarea.addEventListener("keydown", (event) => {
         if (event.key === "Enter" && !event.shiftKey) {
@@ -1662,7 +2784,7 @@
     document.querySelectorAll("[data-action='reset-session']").forEach((button) => {
       button.addEventListener("click", () => {
         if (!session) return;
-        const nextSession = createBlankSession(session.firstName, session.lastName);
+        const nextSession = createBlankSession(session.firstName, session.lastName, session.token);
         nextSession.id = session.id;
         saveSession(nextSession);
         removeDocument(session.id);
@@ -1672,15 +2794,49 @@
       });
     });
 
+    document.querySelectorAll("[data-action='pause-interview']").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!session) return;
+        stopSpeechIfNeeded();
+        const savedSession = saveDraftForSession(session, appState.draftAnswer);
+        const pausedSession = {
+          ...(savedSession || session),
+          pausedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        saveSession(pausedSession);
+        appState.pauseConfirmationSessionId = pausedSession.id;
+        render();
+      });
+    });
+
     document.querySelectorAll("[data-action='finish-interview']").forEach((button) => {
       button.addEventListener("click", () => {
         if (!session) return;
-        const finalDocument = generateDocument(session);
+        if (!isInterviewComplete(session)) {
+          stopSpeechIfNeeded();
+          appState.finishConfirmationSessionId = session.id;
+          appState.pauseConfirmationSessionId = null;
+          render();
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const finishedSession = {
+          ...session,
+          draftAnswer: "",
+          pausedAt: null,
+          completedAt: now,
+          finishedAt: now,
+          updatedAt: now,
+        };
+        saveSession(finishedSession);
+        const finalDocument = generateDocument(finishedSession);
         saveDocument(finalDocument);
         appState.activeSessionId = null;
         appState.draftAnswer = "";
         persist();
-        setHash(routeLabels.home);
+        render();
       });
     });
   }
@@ -1696,7 +2852,13 @@
     }
 
     stopSpeechIfNeeded();
-    const nextSession = advanceInterview(session, value);
+    const nextSession = {
+      ...advanceInterview(session, value),
+      draftAnswer: "",
+      draftUpdatedAt: new Date().toISOString(),
+      pausedAt: null,
+      durationMinutes: (session.durationMinutes || 0) + 6,
+    };
     saveSession(nextSession);
     saveDocument(generateDocument(nextSession));
     appState.draftAnswer = "";
@@ -1704,6 +2866,101 @@
   }
 
   function bindManagerEvents(route) {
+    document.querySelectorAll("[data-action='show-create-interview']").forEach((button) => {
+      button.addEventListener("click", () => {
+        appState.showCreateInterview = true;
+        appState.createdSessionId = null;
+        appState.selectedDashboardSessionId = null;
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-action='cancel-create-interview']").forEach((button) => {
+      button.addEventListener("click", () => {
+        appState.showCreateInterview = false;
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-action='clear-created-session']").forEach((button) => {
+      button.addEventListener("click", () => {
+        appState.createdSessionId = null;
+        appState.showCreateInterview = false;
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-action='submit-create-interview']").forEach((button) => {
+      button.addEventListener("click", () => {
+        const expertName = document.getElementById("expert-name")?.value.trim() || "Expert NumerHyd";
+        const profile = document.getElementById("expert-profile")?.value.trim() || dictionary().profileSeller;
+        const selectedThemeIds = Array.from(document.querySelectorAll(".theme-checkbox:checked"))
+          .map((input) => input.value)
+          .filter((value) => SECTION_ORDER.includes(value));
+        const themeIds = selectedThemeIds.length ? selectedThemeIds : SECTION_ORDER;
+        const parts = expertName.split(/\s+/).filter(Boolean);
+        const session = createBlankSession(parts[0] || "Expert", parts.slice(1).join(" ") || "NumerHyd", createToken(), themeIds);
+        session.profile = profile;
+        session.roleTitle = profile;
+        session.contextNote = `Thèmes sélectionnés : ${themeIds.map(getSectionTitle).join(", ")}`;
+        session.updatedAt = new Date().toISOString();
+        appState.showCreateInterview = false;
+        appState.createdSessionId = session.id;
+        appState.selectedDashboardSessionId = null;
+        saveSession(session, false);
+        saveDocument(generateDocument(session));
+        appState.currentDocId = null;
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-action='select-dashboard-interview']").forEach((button) => {
+      button.addEventListener("click", () => {
+        const sessionId = button.getAttribute("data-session-id");
+        appState.selectedDashboardSessionId = appState.selectedDashboardSessionId === sessionId ? null : sessionId;
+        appState.createdSessionId = null;
+        appState.showCreateInterview = false;
+        render();
+      });
+    });
+
+    const allThemes = document.getElementById("all-themes");
+    if (allThemes) {
+      allThemes.addEventListener("change", () => {
+        document.querySelectorAll(".theme-checkbox").forEach((input) => {
+          input.checked = allThemes.checked;
+        });
+      });
+
+      document.querySelectorAll(".theme-checkbox").forEach((input) => {
+        input.addEventListener("change", () => {
+          const checkedCount = document.querySelectorAll(".theme-checkbox:checked").length;
+          allThemes.checked = checkedCount === SECTION_ORDER.length;
+        });
+      });
+    }
+
+    document.querySelectorAll("[data-action='open-theme-fiche']").forEach((button) => {
+      button.addEventListener("click", () => {
+        const themeId = button.getAttribute("data-theme-id");
+        if (themeId && SECTION_ORDER.includes(themeId)) {
+          appState.activeThemeId = themeId;
+          render();
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-action='create-invite-link']").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const session = createBlankSession("", "", createToken());
+        session.roleTitle = "Entretien technique à démarrer";
+        saveSession(session, false);
+        saveDocument(generateDocument(session));
+        appState.currentDocId = null;
+        setHash(`#/manager/${session.id}`);
+      });
+    });
+
     document.querySelectorAll("[data-action='load-sample']").forEach((button) => {
       button.addEventListener("click", () => {
         const sample = seedSampleSession(appState.language);
@@ -1718,6 +2975,7 @@
       button.addEventListener("click", () => {
         const sessionId = button.getAttribute("data-session-id");
         if (sessionId) {
+          appState.currentDocId = null;
           setHash(`#/manager/${sessionId}`);
         }
       });
@@ -1733,8 +2991,69 @@
       });
     });
 
+    document.querySelectorAll("[data-action='back-synthesis']").forEach((button) => {
+      button.addEventListener("click", () => {
+        appState.currentDocId = null;
+        render();
+      });
+    });
+
     document.querySelectorAll("[data-action='export-pdf']").forEach((button) => {
       button.addEventListener("click", () => window.print());
+    });
+
+    document.querySelectorAll("[data-action='copy-link']").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const link = button.getAttribute("data-link") || "";
+        const token = button.getAttribute("data-token");
+        const value = link || (token ? buildInterviewLink(token) : "");
+        if (!value) {
+          return;
+        }
+
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(value);
+            return;
+          } catch {
+            // fall through to prompt fallback
+          }
+        }
+
+        window.prompt(dictionary().copyLink, value);
+      });
+    });
+
+    document.querySelectorAll("[data-action='send-invite']").forEach((button) => {
+      button.addEventListener("click", () => {
+        const link = button.getAttribute("data-link") || "";
+        const token = button.getAttribute("data-token");
+        const value = link || (token ? buildInterviewLink(token) : "");
+        if (!value) {
+          return;
+        }
+
+        const subject =
+          appState.language === "fr"
+            ? "Lien d’entretien"
+            : "Interview link";
+        const body =
+          appState.language === "fr"
+            ? `Bonjour,%0D%0A%0D%0AVoici le lien pour commencer ou reprendre l’entretien :%0D%0A${encodeURIComponent(value)}`
+            : `Hello,%0D%0A%0D%0AHere is the link to start or resume the interview:%0D%0A${encodeURIComponent(value)}`;
+
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${body}`;
+      });
+    });
+
+    document.querySelectorAll("[data-action='test-expert']").forEach((button) => {
+      button.addEventListener("click", () => {
+        const sessionId = button.getAttribute("data-session-id");
+        if (sessionId) {
+          appState.pauseConfirmationSessionId = null;
+          setHash(`#/interview/${sessionId}/preview`);
+        }
+      });
     });
 
     const docEdit = document.getElementById("doc-edit");
@@ -1745,11 +3064,19 @@
         if (!document) return;
 
         document.updatedAt = new Date().toISOString();
-        document.sections = document.sections.map((section) =>
-          section.id === appState.currentDocId
-            ? { ...section, editableText: event.target.value }
-            : section,
-        );
+        const themeId = event.target.getAttribute("data-theme-id");
+        if (themeId && SECTION_ORDER.includes(themeId)) {
+          document.themeNotes = {
+            ...(document.themeNotes || {}),
+            [themeId]: event.target.value,
+          };
+        } else {
+          document.sections = document.sections.map((section) =>
+            section.id === appState.currentDocId
+              ? { ...section, editableText: event.target.value }
+              : section,
+          );
+        }
         saveDocument(document);
       });
     }

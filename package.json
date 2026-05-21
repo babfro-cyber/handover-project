@@ -1,0 +1,10 @@
+{
+  "name": "numerhyd-demo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "rm -rf dist && mkdir -p dist && cp index.html 404.html app.js styles.css dist/",
+    "test": "node --check app.js",
+    "lint": "node --check app.js"
+  }
+}
