@@ -3,5 +3,7 @@ static_sites:
   - name: website
     environment_slug: html
     source_dir: /
-    output_dir: /
+    build_command: npm run build
+    output_dir: dist
     index_document: index.html
+    catchall_document: index.html
