@@ -5,6 +5,7 @@
     sessions: "knowledge-capture.static.sessions",
     documents: "knowledge-capture.static.documents",
     demoVersion: "knowledge-capture.static.demo-version",
+    managerTokens: "knowledge-capture.static.manager-tokens",
   };
 
   const DEMO_VERSION = "cockpit-v9";
@@ -30,6 +31,8 @@
     interview: "#/interview",
     manager: "#/manager",
   };
+
+  const SUPABASE_CDN_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
 
   const dictionaries = {
     fr: {
@@ -371,8 +374,18 @@
     currentDocId: null,
     showDemoNotice: false,
     showCreateInterview: false,
+    backend: {
+      configured: false,
+      client: null,
+      clientPromise: null,
+      managerLoaded: false,
+      managerLoading: false,
+      managerError: "",
+      publicLoads: {},
+    },
   };
 
+  initializeBackend();
   initializeSpeech();
   normalizeSeedState();
   window.addEventListener("hashchange", render);
@@ -382,6 +395,47 @@
 
   function dictionary() {
     return dictionaries[appState.language];
+  }
+
+  function getBackendConfig() {
+    const config = window.NUMERHYD_CONFIG || {};
+    return {
+      supabaseUrl: String(config.SUPABASE_URL || config.supabaseUrl || "").trim(),
+      supabaseAnonKey: String(config.SUPABASE_ANON_KEY || config.supabaseAnonKey || "").trim(),
+      managerToken: String(config.MANAGER_TOKEN || config.managerToken || "").trim(),
+    };
+  }
+
+  function initializeBackend() {
+    const config = getBackendConfig();
+    appState.backend.configured = Boolean(config.supabaseUrl && config.supabaseAnonKey);
+  }
+
+  function backendAvailable() {
+    return appState.backend.configured;
+  }
+
+  function getStoredManagerTokens() {
+    const tokens = loadJson(STORAGE_KEYS.managerTokens, []);
+    const fromConfig = getBackendConfig().managerToken;
+    return uniqueStrings([fromConfig].concat(Array.isArray(tokens) ? tokens : []));
+  }
+
+  function rememberManagerToken(token) {
+    if (!token) return;
+    const tokens = uniqueStrings(getStoredManagerTokens().concat(token));
+    try {
+      window.localStorage.setItem(STORAGE_KEYS.managerTokens, JSON.stringify(tokens));
+    } catch {
+      // Ignore localStorage write failures for this prototype.
+    }
+  }
+
+  function uniqueStrings(values) {
+    return values
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+      .filter((value, index, list) => list.indexOf(value) === index);
   }
 
   function loadJson(key, fallback) {
@@ -404,8 +458,11 @@
   function persist() {
     try {
       window.localStorage.setItem(STORAGE_KEYS.language, appState.language);
-      window.localStorage.setItem(STORAGE_KEYS.sessions, JSON.stringify(appState.sessions));
-      window.localStorage.setItem(STORAGE_KEYS.documents, JSON.stringify(appState.documents));
+      const localSessions = appState.sessions.filter((session) => session?.source !== "supabase");
+      const localSessionIds = new Set(localSessions.map((session) => session.id));
+      const localDocuments = appState.documents.filter((document) => localSessionIds.has(document?.sessionId));
+      window.localStorage.setItem(STORAGE_KEYS.sessions, JSON.stringify(localSessions));
+      window.localStorage.setItem(STORAGE_KEYS.documents, JSON.stringify(localDocuments));
 
       if (appState.activeSessionId) {
         window.localStorage.setItem(STORAGE_KEYS.activeSessionId, appState.activeSessionId);
@@ -549,6 +606,10 @@
   }
 
   function buildLocalExpertLink(session) {
+    if (session?.source === "supabase") {
+      return buildInterviewLink(session.token || session.id);
+    }
+
     const link = new URL(`/interview/${encodeURIComponent(session.token || session.id)}`, window.location.origin);
     const payload = {
       firstName: session.firstName || "",
@@ -899,7 +960,7 @@
 
     try {
       const currentVersion = window.localStorage.getItem(STORAGE_KEYS.demoVersion);
-      if (currentVersion !== DEMO_VERSION) {
+      if (currentVersion !== DEMO_VERSION && !backendAvailable()) {
         seedCockpitDemo();
         return;
       }
@@ -1065,6 +1126,14 @@
   }
 
   function saveSession(session, makeActive = true) {
+    if (session?.source === "supabase") {
+      upsertSessionInMemory(session);
+      if (makeActive) {
+        appState.activeSessionId = session.id;
+      }
+      return;
+    }
+
     const index = appState.sessions.findIndex((item) => item.id === session.id);
     if (index >= 0) {
       appState.sessions[index] = session;
@@ -1088,6 +1157,13 @@
       draftUpdatedAt: now,
       updatedAt: now,
     };
+
+    if (session.source === "supabase") {
+      upsertSessionInMemory(nextSession);
+      patchSaveStatus(now);
+      return nextSession;
+    }
+
     saveSession(nextSession);
     patchSaveStatus(now);
     return nextSession;
@@ -1135,6 +1211,330 @@
   function removeDocument(sessionId) {
     appState.documents = appState.documents.filter((item) => item.sessionId !== sessionId);
     persist();
+  }
+
+  function loadSupabaseClient() {
+    if (!backendAvailable()) {
+      return Promise.resolve(null);
+    }
+
+    if (appState.backend.client) {
+      return Promise.resolve(appState.backend.client);
+    }
+
+    if (appState.backend.clientPromise) {
+      return appState.backend.clientPromise;
+    }
+
+    appState.backend.clientPromise = new Promise((resolve, reject) => {
+      const createClientFromGlobal = () => {
+        if (!window.supabase?.createClient) {
+          return false;
+        }
+
+        const config = getBackendConfig();
+        appState.backend.client = window.supabase.createClient(
+          config.supabaseUrl,
+          config.supabaseAnonKey,
+        );
+        resolve(appState.backend.client);
+        return true;
+      };
+
+      if (createClientFromGlobal()) {
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = SUPABASE_CDN_URL;
+      script.async = true;
+      script.onload = () => {
+        if (!createClientFromGlobal()) {
+          reject(new Error("Supabase client did not load"));
+        }
+      };
+      script.onerror = () => reject(new Error("Supabase client failed to load"));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      appState.backend.managerError = error.message || "Supabase indisponible";
+      appState.backend.clientPromise = null;
+      throw error;
+    });
+
+    return appState.backend.clientPromise;
+  }
+
+  async function callSupabaseRpc(functionName, params) {
+    const client = await loadSupabaseClient();
+    if (!client) {
+      return null;
+    }
+
+    const { data, error } = await client.rpc(functionName, params);
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  }
+
+  function getThemeQuestionFromPlan(plan, themeId) {
+    const theme = getPlanThemes(plan).find((item) => item.id === themeId);
+    return theme?.question || getSectionQuestion(themeId);
+  }
+
+  function getPlanThemes(plan) {
+    return Array.isArray(plan?.themes) ? plan.themes : [];
+  }
+
+  function getDefaultPlanThemeIds(plan) {
+    const planThemeIds = getPlanThemes(plan)
+      .map((theme) => theme.id)
+      .filter((id) => SECTION_ORDER.includes(id));
+    return planThemeIds.length ? planThemeIds : SECTION_ORDER;
+  }
+
+  function convertSupabaseRowsToCurrentSessionShape(payload) {
+    if (!payload?.interview) {
+      return null;
+    }
+
+    const interview = payload.interview;
+    const plan = payload.plan || {};
+    const answers = Array.isArray(payload.answers) ? payload.answers : [];
+    const themeIds = normalizeThemeIds(
+      Array.isArray(interview.selected_theme_ids)
+        ? interview.selected_theme_ids
+        : getDefaultPlanThemeIds(plan),
+    );
+    const answeredThemeIds = themeIds.filter((themeId) =>
+      answers.some((answer) => answer.theme_id === themeId && answer.answer_text),
+    );
+    const firstUnansweredThemeId = themeIds.find((themeId) => !answeredThemeIds.includes(themeId));
+    const currentSectionId = firstUnansweredThemeId || interview.current_theme_id || themeIds[themeIds.length - 1];
+    const completionPercent = Math.round((answeredThemeIds.length / Math.max(1, themeIds.length)) * 100);
+    const expertNameParts = String(interview.expert_name || "Expert NumerHyd").trim().split(/\s+/).filter(Boolean);
+    const firstName = expertNameParts[0] || "Expert";
+    const lastName = expertNameParts.slice(1).join(" ") || "NumerHyd";
+    const messages = [];
+
+    themeIds.forEach((themeId) => {
+      const answer = answers.find((item) => item.theme_id === themeId);
+      const questionText = answer?.question_text || getThemeQuestionFromPlan(plan, themeId);
+      messages.push({
+        id: `question-${interview.id}-${themeId}`,
+        role: "assistant",
+        content: questionText,
+        sectionId: themeId,
+        createdAt: interview.created_at || new Date().toISOString(),
+      });
+
+      if (answer?.answer_text) {
+        messages.push({
+          id: answer.id,
+          role: "user",
+          content: answer.answer_text,
+          sectionId: themeId,
+          createdAt: answer.created_at || answer.updated_at || interview.updated_at,
+        });
+      }
+    });
+
+    return {
+      id: interview.id,
+      token: interview.public_token,
+      tokenExpiresAt: null,
+      firstName,
+      lastName,
+      language: appState.language,
+      roleTitle: interview.profile || "Expertise hydraulique NumerHyd",
+      profile: interview.profile || "",
+      source: "supabase",
+      selectedThemeIds: themeIds,
+      currentSectionId,
+      completionPercent,
+      answeredPromptCount: answeredThemeIds.length,
+      updatedAt: interview.updated_at || interview.created_at || new Date().toISOString(),
+      startedAt: interview.started_at || null,
+      sessionCount: interview.started_at ? 1 : 0,
+      durationMinutes: Math.max(0, answeredThemeIds.length * 6),
+      draftAnswer: "",
+      draftUpdatedAt: interview.updated_at || interview.created_at || new Date().toISOString(),
+      pausedAt: null,
+      partialSubmittedAt: null,
+      completedAt: interview.completed_at || (interview.status === "completed" ? interview.updated_at : null),
+      contextNote: "Entretien sauvegardé dans Supabase.",
+      messages,
+      sections: createSections(currentSectionId, themeIds).map((section) => ({
+        ...section,
+        status:
+          section.id === currentSectionId
+            ? "current"
+            : answeredThemeIds.includes(section.id)
+              ? "complete"
+              : "upcoming",
+      })),
+    };
+  }
+
+  function upsertSessionInMemory(session) {
+    if (!session) return null;
+    const index = appState.sessions.findIndex((item) => item.id === session.id || item.token === session.token);
+    if (index >= 0) {
+      appState.sessions[index] = session;
+    } else {
+      appState.sessions.unshift(session);
+    }
+
+    const document = generateDocument(session);
+    const documentIndex = appState.documents.findIndex((item) => item.sessionId === session.id);
+    if (documentIndex >= 0) {
+      appState.documents[documentIndex] = document;
+    } else {
+      appState.documents.unshift(document);
+    }
+
+    return session;
+  }
+
+  function getNextThemeAfterSubmit(session) {
+    const themeIds = getSessionThemeIds(session);
+    const currentIndex = themeIds.indexOf(session.currentSectionId);
+    if (currentIndex < 0 || currentIndex >= themeIds.length - 1) {
+      return {
+        nextThemeId: themeIds[themeIds.length - 1],
+        status: "completed",
+      };
+    }
+
+    return {
+      nextThemeId: themeIds[currentIndex + 1],
+      status: "in_progress",
+    };
+  }
+
+  async function createRemoteInterview({ expertName, profile, selectedThemeIds }) {
+    const config = getBackendConfig();
+    const managerToken = config.managerToken || createToken();
+    const publicToken = createToken();
+    const payload = await callSupabaseRpc("create_interview", {
+      p_manager_token: managerToken,
+      p_public_token: publicToken,
+      p_expert_name: expertName,
+      p_profile: profile,
+      p_selected_theme_ids: selectedThemeIds,
+      p_plan_slug: "numerhyd-v1",
+    });
+    rememberManagerToken(managerToken);
+    const session = convertSupabaseRowsToCurrentSessionShape(payload);
+    appState.backend.managerError = "";
+    return upsertSessionInMemory(session);
+  }
+
+  async function loadRemoteInterviewByToken(publicToken) {
+    const payload = await callSupabaseRpc("get_public_interview", {
+      p_public_token: publicToken,
+    });
+    const session = convertSupabaseRowsToCurrentSessionShape(payload);
+    return upsertSessionInMemory(session);
+  }
+
+  async function submitRemoteTextAnswer(session, answerText) {
+    const next = getNextThemeAfterSubmit(session);
+    const questionText = getSectionQuestion(session.currentSectionId);
+    const payload = await callSupabaseRpc("submit_text_answer", {
+      p_public_token: session.token,
+      p_theme_id: session.currentSectionId,
+      p_question_text: questionText,
+      p_answer_text: answerText,
+      p_next_theme_id: next.nextThemeId,
+      p_status: next.status,
+    });
+    const nextSession = convertSupabaseRowsToCurrentSessionShape(payload);
+    appState.backend.managerError = "";
+    return upsertSessionInMemory(nextSession);
+  }
+
+  async function loadRemoteManagerData() {
+    const managerTokens = getStoredManagerTokens();
+    if (!backendAvailable() || managerTokens.length === 0) {
+      if (backendAvailable()) {
+        appState.sessions = [];
+        appState.documents = [];
+      } else {
+        appState.sessions = appState.sessions.filter((session) => session?.source !== "supabase");
+      }
+      appState.backend.managerLoaded = true;
+      return [];
+    }
+
+    const payloads = [];
+    for (const managerToken of managerTokens) {
+      const data = await callSupabaseRpc("get_manager_interviews", {
+        p_manager_token: managerToken,
+      });
+      if (Array.isArray(data)) {
+        payloads.push(...data);
+      }
+    }
+
+    const remoteSessions = payloads
+      .map(convertSupabaseRowsToCurrentSessionShape)
+      .filter(Boolean)
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    const seen = new Set();
+    const dedupedSessions = remoteSessions.filter((session) => {
+      if (seen.has(session.id)) return false;
+      seen.add(session.id);
+      return true;
+    });
+
+    appState.sessions = dedupedSessions;
+    appState.documents = dedupedSessions.map(generateDocument);
+    appState.backend.managerLoaded = true;
+    appState.backend.managerError = "";
+    return dedupedSessions;
+  }
+
+  async function loadRemoteManagerDetail(managerToken, interviewId) {
+    const payload = await callSupabaseRpc("get_manager_interview_detail", {
+      p_manager_token: managerToken,
+      p_interview_id: interviewId,
+    });
+    const session = convertSupabaseRowsToCurrentSessionShape(payload);
+    return upsertSessionInMemory(session);
+  }
+
+  function queueRemoteManagerLoad(force = false) {
+    if (!backendAvailable()) return;
+    if (appState.backend.managerLoading) return;
+    if (appState.backend.managerLoaded && !force) return;
+
+    appState.backend.managerLoading = true;
+    loadRemoteManagerData()
+      .catch((error) => {
+        appState.backend.managerError = error.message || "Chargement Supabase impossible.";
+      })
+      .finally(() => {
+        appState.backend.managerLoading = false;
+        render();
+      });
+  }
+
+  function queueRemotePublicLoad(token) {
+    if (!backendAvailable() || !token) return;
+    const state = appState.backend.publicLoads[token];
+    if (state === "loading" || state === "loaded" || state === "missing") return;
+
+    appState.backend.publicLoads[token] = "loading";
+    loadRemoteInterviewByToken(token)
+      .then((session) => {
+        appState.backend.publicLoads[token] = session ? "loaded" : "missing";
+      })
+      .catch(() => {
+        appState.backend.publicLoads[token] = "missing";
+      })
+      .finally(render);
   }
 
   function analyzeText(text) {
@@ -1576,6 +1976,10 @@
   }
 
   function ensureManagerDemo() {
+    if (backendAvailable()) {
+      return;
+    }
+
     if (appState.sessions.length > 0) {
       return;
     }
@@ -1817,6 +2221,7 @@
   function renderCockpit() {
     const copy = dictionary();
     ensureManagerDemo();
+    queueRemoteManagerLoad();
     const items = [...appState.sessions].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     const createdSession = appState.createdSessionId ? getSessionById(appState.createdSessionId) : null;
     const selectedSession = appState.selectedDashboardSessionId ? getSessionById(appState.selectedDashboardSessionId) : null;
@@ -1889,6 +2294,16 @@
             <p class="eyebrow">Tableau de bord</p>
             <h2 class="section-title" style="margin-top:10px;">Entretiens en cours</h2>
             <p class="helper-note" style="margin-top:8px;">Suivez les entretiens déjà démarrés et consultez les synthèses.</p>
+            ${
+              backendAvailable() && appState.backend.managerLoading
+                ? `<p class="resume-banner">Chargement Supabase en cours...</p>`
+                : ""
+            }
+            ${
+              backendAvailable() && appState.backend.managerError
+                ? `<p class="helper-note" style="margin-top:10px;">${escapeHtml(appState.backend.managerError)}</p>`
+                : ""
+            }
             <div class="interview-row-list">
               ${items.map((item) => {
                 const expertName = `${item.firstName} ${item.lastName}`.trim() || "Expert";
@@ -1943,6 +2358,34 @@
 
   function renderExpertInterview(route) {
     const copy = dictionary();
+    if (route.token && backendAvailable()) {
+      const remoteSession = getSessionByToken(route.token);
+      const loadState = appState.backend.publicLoads[route.token];
+      if (!remoteSession && loadState !== "missing") {
+        queueRemotePublicLoad(route.token);
+        return `
+          <div class="expert-shell">
+            <section class="expert-card centered">
+              <p class="eyebrow">${copy.interviewArea}</p>
+              <h1 class="expert-title">Chargement de l’entretien</h1>
+              <p class="expert-copy">Nous récupérons les questions et les réponses déjà sauvegardées.</p>
+            </section>
+          </div>
+        `;
+      }
+
+      if (!remoteSession && loadState === "missing") {
+        return `
+          <div class="expert-shell">
+            <section class="expert-card centered">
+              <p class="eyebrow">${copy.invalidTokenTitle}</p>
+              <p class="expert-copy">${copy.invalidTokenBody}</p>
+            </section>
+          </div>
+        `;
+      }
+    }
+
     const session = route.token
       ? getOrCreateSessionByToken(route.token)
       : route.sessionId
@@ -2087,6 +2530,11 @@
             <label class="label" for="answer-input">${copy.yourAnswer}</label>
             <textarea id="answer-input" class="textarea expert-textarea" placeholder="${escapeHtml(copy.speechHint)}">${escapeHtml(appState.draftAnswer)}</textarea>
             <p class="helper-note">${copy.submitHint}</p>
+            ${
+              backendAvailable() && session.source === "supabase" && appState.backend.managerError
+                ? `<p class="helper-note" style="margin-top:10px;">${escapeHtml(appState.backend.managerError)}</p>`
+                : ""
+            }
           </div>
           <div class="expert-actions">
             <button class="button expert-primary" data-action="submit-answer">${copy.sendAnswer}</button>
@@ -2447,6 +2895,7 @@
   function renderManager(route) {
     const copy = dictionary();
     ensureManagerDemo();
+    queueRemoteManagerLoad();
     const session = route.sessionId ? getSessionById(route.sessionId) : null;
 
     if (!session) {
@@ -2683,14 +3132,16 @@
             return;
           }
 
-          session = {
-            ...session,
-            firstName,
-            lastName,
-            roleTitle: "Expertise hydraulique NumerHyd",
-            updatedAt: new Date().toISOString(),
-          };
-          saveSession(session, false);
+          if (session.source !== "supabase") {
+            session = {
+              ...session,
+              firstName,
+              lastName,
+              roleTitle: "Expertise hydraulique NumerHyd",
+              updatedAt: new Date().toISOString(),
+            };
+            saveSession(session, false);
+          }
         } else {
           session = route.sessionId
             ? getSessionById(route.sessionId)
@@ -2841,7 +3292,7 @@
     });
   }
 
-  function submitCurrentAnswer(session) {
+  async function submitCurrentAnswer(session) {
     if (!session) {
       return;
     }
@@ -2852,6 +3303,23 @@
     }
 
     stopSpeechIfNeeded();
+    if (session.source === "supabase") {
+      try {
+        const nextSession = await submitRemoteTextAnswer(session, value);
+        appState.draftAnswer = "";
+        if (nextSession) {
+          nextSession.draftAnswer = "";
+          nextSession.draftUpdatedAt = new Date().toISOString();
+          upsertSessionInMemory(nextSession);
+        }
+        render();
+      } catch (error) {
+        appState.backend.managerError = error.message || "La réponse n’a pas pu être sauvegardée.";
+        render();
+      }
+      return;
+    }
+
     const nextSession = {
       ...advanceInterview(session, value),
       draftAnswer: "",
@@ -2891,13 +3359,35 @@
     });
 
     document.querySelectorAll("[data-action='submit-create-interview']").forEach((button) => {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         const expertName = document.getElementById("expert-name")?.value.trim() || "Expert NumerHyd";
         const profile = document.getElementById("expert-profile")?.value.trim() || dictionary().profileSeller;
         const selectedThemeIds = Array.from(document.querySelectorAll(".theme-checkbox:checked"))
           .map((input) => input.value)
           .filter((value) => SECTION_ORDER.includes(value));
         const themeIds = selectedThemeIds.length ? selectedThemeIds : SECTION_ORDER;
+
+        if (backendAvailable()) {
+          try {
+            const session = await createRemoteInterview({
+              expertName,
+              profile,
+              selectedThemeIds: themeIds,
+            });
+            appState.showCreateInterview = false;
+            appState.createdSessionId = session?.id || null;
+            appState.selectedDashboardSessionId = null;
+            appState.currentDocId = null;
+            appState.backend.managerLoaded = false;
+            queueRemoteManagerLoad(true);
+            render();
+          } catch (error) {
+            appState.backend.managerError = error.message || "La création Supabase a échoué.";
+            render();
+          }
+          return;
+        }
+
         const parts = expertName.split(/\s+/).filter(Boolean);
         const session = createBlankSession(parts[0] || "Expert", parts.slice(1).join(" ") || "NumerHyd", createToken(), themeIds);
         session.profile = profile;
