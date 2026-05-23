@@ -23,6 +23,20 @@ DigitalOcean should serve the generated `dist` directory:
 
 ## Notes
 
-- No environment variables are required.
+- Without Supabase environment variables, the app keeps using the local demo fallback.
+- For Phase 1 Supabase persistence, set these App Platform environment variables:
+  - `SUPABASE_URL`
+  - `SUPABASE_ANON_KEY`
+  - `NUMERHYD_MANAGER_TOKEN` optional, but useful if the same manager dashboard should load interviews after clearing browser storage.
 - The `.do/app.yaml` file in this repo preconfigures the static-site component settings.
-- Expert links use `/interview/:token` and include a small encoded demo payload so a different browser can open the flow without a backend.
+- Expert links use `/interview/:token`.
+- Local demo links still include a small encoded demo payload when Supabase config is missing.
+- Supabase-backed links load interview data through browser-safe RPC calls with the public anon key. Do not put a service-role key in this app.
+
+## Supabase Phase 1 setup
+
+1. Open the Supabase SQL editor.
+2. Run `supabase_phase1.sql` from this repository.
+3. Copy the project URL and public anon key from Supabase Project Settings > API.
+4. Add the variables above to DigitalOcean App Platform.
+5. Redeploy the static site. The build command writes `dist/env.js` from those variables.
