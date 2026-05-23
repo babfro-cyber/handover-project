@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "rm -rf dist && mkdir -p dist && cp index.html 404.html app.js styles.css dist/ && node -e \"const fs=require('fs');const c={SUPABASE_URL:process.env.SUPABASE_URL||'',SUPABASE_ANON_KEY:process.env.SUPABASE_ANON_KEY||'',MANAGER_TOKEN:process.env.NUMERHYD_MANAGER_TOKEN||''};fs.writeFileSync('dist/env.js','window.NUMERHYD_CONFIG = '+JSON.stringify(c)+';\\n');\"",
+    "build": "rm -rf dist && mkdir -p dist && cp index.html 404.html app.js styles.css dist/ && node -e \"const fs=require('fs');const managerToken=process.env.NUMERHYD_MANAGER_TOKEN||'';const c={SUPABASE_URL:process.env.SUPABASE_URL||'',SUPABASE_ANON_KEY:process.env.SUPABASE_ANON_KEY||'',NUMERHYD_MANAGER_TOKEN:managerToken,MANAGER_TOKEN:managerToken};fs.writeFileSync('dist/env.js','window.NUMERHYD_CONFIG = '+JSON.stringify(c)+';\\n');\"",
     "test": "node --check app.js",
     "lint": "node --check app.js"
   }

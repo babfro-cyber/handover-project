@@ -402,7 +402,7 @@
     return {
       supabaseUrl: String(config.SUPABASE_URL || config.supabaseUrl || "").trim(),
       supabaseAnonKey: String(config.SUPABASE_ANON_KEY || config.supabaseAnonKey || "").trim(),
-      managerToken: String(config.MANAGER_TOKEN || config.managerToken || "").trim(),
+      managerToken: String(config.NUMERHYD_MANAGER_TOKEN || config.MANAGER_TOKEN || config.managerToken || "").trim(),
     };
   }
 
