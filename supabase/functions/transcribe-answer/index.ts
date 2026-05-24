@@ -10,10 +10,11 @@ const AUDIO_BUCKET = "answer-audio";
 const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
 const DEFAULT_TRANSCRIPTION_MODEL = "gpt-4o-mini-transcribe";
 
-type InterviewRow = {
-  id: string;
-  public_token: string;
-  selected_theme_ids: string[];
+type AudioAssetPayload = {
+  audio_asset_id: string;
+  interview_id: string;
+  theme_id: string;
+  storage_path: string;
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
@@ -32,6 +33,101 @@ function requiredEnv(name: string) {
     throw new Error(`${name} is not configured`);
   }
   return value;
+}
+
+function getSupabasePublishableKey() {
+  const legacyAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  if (legacyAnonKey) {
+    return legacyAnonKey;
+  }
+
+  const publishableKeysJson = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS");
+  if (publishableKeysJson) {
+    try {
+      const publishableKeys = JSON.parse(publishableKeysJson) as Record<string, unknown>;
+      const defaultPublishableKey = findSupabasePublishableKey(publishableKeys.default);
+      if (defaultPublishableKey) {
+        return defaultPublishableKey;
+      }
+
+      const anyPublishableKey = findSupabasePublishableKey(publishableKeys);
+      if (anyPublishableKey) {
+        return anyPublishableKey;
+      }
+    } catch {
+      throw new Error("SUPABASE_PUBLISHABLE_KEYS is not valid JSON");
+    }
+  }
+
+  throw new Error("Supabase publishable key is not configured");
+}
+
+function findSupabasePublishableKey(value: unknown): string {
+  if (typeof value === "string") {
+    return value.startsWith("sb_publishable_") || value.startsWith("eyJ") ? value : "";
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findSupabasePublishableKey(item);
+      if (found) return found;
+    }
+  }
+
+  if (typeof value === "object" && value !== null) {
+    for (const item of Object.values(value)) {
+      const found = findSupabasePublishableKey(item);
+      if (found) return found;
+    }
+  }
+
+  return "";
+}
+
+async function callRpc<T>(
+  supabaseUrl: string,
+  supabaseKey: string,
+  functionName: string,
+  body: Record<string, unknown>,
+): Promise<T> {
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${functionName}`, {
+    method: "POST",
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.message || payload?.error || `${functionName} failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  return payload as T;
+}
+
+function errorMessage(error: unknown, fallback = "Transcription failed") {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeMessage = "message" in error ? String(error.message || "") : "";
+    if (maybeMessage) {
+      return maybeMessage;
+    }
+
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return fallback;
+    }
+  }
+
+  return typeof error === "string" && error ? error : fallback;
 }
 
 function extensionForMimeType(mimeType: string) {
@@ -80,20 +176,21 @@ Deno.serve(async (req) => {
   let interviewId = "";
   let audioSaved = false;
   let themeId = "";
+  let publicToken = "";
   let model = Deno.env.get("OPENAI_TRANSCRIPTION_MODEL") || DEFAULT_TRANSCRIPTION_MODEL;
 
   try {
     const supabaseUrl = requiredEnv("SUPABASE_URL");
-    const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseKey = getSupabasePublishableKey();
     const openAiKey = requiredEnv("OPENAI_API_KEY");
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: {
         persistSession: false,
       },
     });
 
     const formData = await req.formData();
-    const publicToken = String(formData.get("public_token") || "").trim();
+    publicToken = String(formData.get("public_token") || "").trim();
     themeId = String(formData.get("theme_id") || "").trim();
     const language = normalizeLanguage(formData.get("language"));
     const durationMs = Number.parseInt(String(formData.get("duration_ms") || "0"), 10) || null;
@@ -119,47 +216,30 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "audio file exceeds 25 MB limit" }, 413);
     }
 
-    const { data: interviewData, error: interviewError } = await supabase
-      .from("interviews")
-      .select("id, public_token, selected_theme_ids")
-      .eq("public_token", publicToken)
-      .maybeSingle();
-
-    if (interviewError) {
-      throw interviewError;
-    }
-
-    const interview = interviewData as InterviewRow | null;
-    if (!interview) {
-      return jsonResponse({ error: "invalid public token" }, 404);
-    }
-
-    if (!Array.isArray(interview.selected_theme_ids) || !interview.selected_theme_ids.includes(themeId)) {
-      return jsonResponse({ error: "theme is not part of this interview" }, 400);
-    }
-
-    interviewId = interview.id;
     audioAssetId = crypto.randomUUID();
     const mimeType = normalizeMimeType(audioFile.type || "audio/webm");
     const extension = extensionForMimeType(mimeType);
-    const storagePath = `${interview.id}/${themeId}/${audioAssetId}.${extension}`;
+    const storagePath = `${publicToken}/${themeId}/${audioAssetId}.${extension}`;
 
-    const { error: insertAudioError } = await supabase
-      .from("audio_assets")
-      .insert({
-        id: audioAssetId,
-        interview_id: interview.id,
-        theme_id: themeId,
-        storage_path: storagePath,
-        mime_type: mimeType,
-        byte_size: audioFile.size,
-        duration_ms: durationMs,
-        status: "uploading",
-      });
+    const audioAsset = await callRpc<AudioAssetPayload | null>(
+      supabaseUrl,
+      supabaseKey,
+      "create_audio_asset_for_public_interview",
+      {
+        p_public_token: publicToken,
+        p_audio_asset_id: audioAssetId,
+        p_theme_id: themeId,
+        p_storage_path: storagePath,
+        p_mime_type: mimeType,
+        p_byte_size: audioFile.size,
+        p_duration_ms: durationMs,
+      },
+    );
 
-    if (insertAudioError) {
-      throw insertAudioError;
+    if (!audioAsset) {
+      return jsonResponse({ error: "invalid public token" }, 404);
     }
+    interviewId = audioAsset.interview_id;
 
     const audioBytes = new Uint8Array(await audioFile.arrayBuffer());
     const { error: uploadError } = await supabase.storage
@@ -170,12 +250,20 @@ Deno.serve(async (req) => {
       });
 
     if (uploadError) {
-      await supabase.from("audio_assets").update({ status: "transcription_failed" }).eq("id", audioAssetId);
+      await callRpc(supabaseUrl, supabaseKey, "update_audio_asset_status_for_public_interview", {
+        p_public_token: publicToken,
+        p_audio_asset_id: audioAssetId,
+        p_status: "transcription_failed",
+      });
       throw uploadError;
     }
 
     audioSaved = true;
-    await supabase.from("audio_assets").update({ status: "transcribing" }).eq("id", audioAssetId);
+    await callRpc(supabaseUrl, supabaseKey, "update_audio_asset_status_for_public_interview", {
+      p_public_token: publicToken,
+      p_audio_asset_id: audioAssetId,
+      p_status: "transcribing",
+    });
 
     const openAiForm = new FormData();
     openAiForm.append("model", model);
@@ -199,17 +287,20 @@ Deno.serve(async (req) => {
         transcriptionBody?.error?.message ||
         `OpenAI transcription failed with status ${transcriptionResponse.status}`;
 
-      await supabase.from("transcripts").insert({
-        interview_id: interview.id,
-        audio_asset_id: audioAssetId,
-        theme_id: themeId,
-        transcript_text: "",
-        language: language || null,
-        model,
-        status: "failed",
-        error_message: errorMessage,
+      await callRpc(supabaseUrl, supabaseKey, "insert_transcript_for_public_interview", {
+        p_public_token: publicToken,
+        p_audio_asset_id: audioAssetId,
+        p_transcript_text: "",
+        p_language: language || null,
+        p_model: model,
+        p_status: "failed",
+        p_error_message: errorMessage,
       });
-      await supabase.from("audio_assets").update({ status: "transcription_failed" }).eq("id", audioAssetId);
+      await callRpc(supabaseUrl, supabaseKey, "update_audio_asset_status_for_public_interview", {
+        p_public_token: publicToken,
+        p_audio_asset_id: audioAssetId,
+        p_status: "transcription_failed",
+      });
 
       return jsonResponse(
         {
@@ -222,57 +313,61 @@ Deno.serve(async (req) => {
     }
 
     const transcriptText = String(transcriptionBody?.text || "").trim();
-    const { data: transcript, error: transcriptError } = await supabase
-      .from("transcripts")
-      .insert({
-        interview_id: interview.id,
-        audio_asset_id: audioAssetId,
-        theme_id: themeId,
-        transcript_text: transcriptText,
-        language: language || null,
-        model,
-        status: "completed",
-        error_message: null,
-      })
-      .select("id")
-      .single();
+    const transcript = await callRpc<{ transcript_id: string }>(
+      supabaseUrl,
+      supabaseKey,
+      "insert_transcript_for_public_interview",
+      {
+        p_public_token: publicToken,
+        p_audio_asset_id: audioAssetId,
+        p_transcript_text: transcriptText,
+        p_language: language || null,
+        p_model: model,
+        p_status: "completed",
+        p_error_message: null,
+      },
+    );
 
-    if (transcriptError) {
-      throw transcriptError;
-    }
-
-    await supabase.from("audio_assets").update({ status: "transcribed" }).eq("id", audioAssetId);
+    await callRpc(supabaseUrl, supabaseKey, "update_audio_asset_status_for_public_interview", {
+      p_public_token: publicToken,
+      p_audio_asset_id: audioAssetId,
+      p_status: "transcribed",
+    });
 
     return jsonResponse({
       transcript_text: transcriptText,
-      transcript_id: transcript?.id,
+      transcript_id: transcript?.transcript_id,
       audio_asset_id: audioAssetId,
       audio_saved: true,
       model,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Transcription failed";
+    const message = errorMessage(error);
+    console.error("transcribe-answer failed", message);
 
     if (audioSaved && audioAssetId && interviewId) {
       const supabaseUrl = Deno.env.get("SUPABASE_URL");
-      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-      if (supabaseUrl && serviceRoleKey) {
-        const supabase = createClient(supabaseUrl, serviceRoleKey, {
-          auth: {
-            persistSession: false,
-          },
+      let supabaseKey = "";
+      try {
+        supabaseKey = getSupabasePublishableKey();
+      } catch {
+        supabaseKey = "";
+      }
+      if (supabaseUrl && supabaseKey && publicToken) {
+        await callRpc(supabaseUrl, supabaseKey, "insert_transcript_for_public_interview", {
+          p_public_token: publicToken,
+          p_audio_asset_id: audioAssetId,
+          p_transcript_text: "",
+          p_language: null,
+          p_model: model,
+          p_status: "failed",
+          p_error_message: message,
         });
-        await supabase.from("transcripts").insert({
-          interview_id: interviewId,
-          audio_asset_id: audioAssetId,
-          theme_id: themeId,
-          transcript_text: "",
-          language: null,
-          model,
-          status: "failed",
-          error_message: message,
+        await callRpc(supabaseUrl, supabaseKey, "update_audio_asset_status_for_public_interview", {
+          p_public_token: publicToken,
+          p_audio_asset_id: audioAssetId,
+          p_status: "transcription_failed",
         });
-        await supabase.from("audio_assets").update({ status: "transcription_failed" }).eq("id", audioAssetId);
       }
     }
 
