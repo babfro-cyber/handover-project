@@ -33,6 +33,13 @@
   };
 
   const SUPABASE_CDN_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
+  const AUDIO_MIME_CANDIDATES = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/mpeg",
+    "audio/wav",
+  ];
 
   const dictionaries = {
     fr: {
@@ -128,6 +135,14 @@
       speechDenied: "Accès au micro refusé. Vous pouvez continuer par écrit.",
       speechError: "La saisie vocale n’a pas pu démarrer. Vous pouvez continuer par écrit.",
       speechHint: "Parlez, puis corrigez la transcription si nécessaire avant de valider.",
+      recordingStatus: "Enregistrement",
+      recordingIdle: "Prêt à enregistrer",
+      recordingActive: "Enregistrement en cours",
+      uploadingAudio: "Audio en cours de sauvegarde",
+      transcribingAudio: "Transcription en cours",
+      transcriptReady: "Transcription prête. Vous pouvez la corriger avant de valider.",
+      transcriptionFailed: "La transcription a échoué, mais l’audio est sauvegardé. Vous pouvez continuer par écrit.",
+      recordingUnsupported: "L’enregistrement audio n’est pas disponible dans ce navigateur. Vous pouvez continuer par écrit.",
       sendAnswer: "Valider la réponse",
       submitHint: "Le texte reste éditable si la transcription est imparfaite.",
       hintsTitle: "Repères utiles",
@@ -264,6 +279,14 @@
       speechDenied: "Microphone access was denied. You can keep typing instead.",
       speechError: "Voice input could not start. You can keep typing instead.",
       speechHint: "Speak naturally, then review the text before sending.",
+      recordingStatus: "Recording",
+      recordingIdle: "Ready to record",
+      recordingActive: "Recording",
+      uploadingAudio: "Saving audio",
+      transcribingAudio: "Transcribing",
+      transcriptReady: "Transcript ready. You can edit it before sending.",
+      transcriptionFailed: "Transcription failed, but the audio is saved. You can keep typing.",
+      recordingUnsupported: "Audio recording is not available in this browser. You can keep typing.",
       sendAnswer: "Send",
       submitHint: "Enter to send. Shift + Enter for a new line.",
       hintsTitle: "Helpful cues",
@@ -371,6 +394,19 @@
       recognition: null,
       transcriptBase: "",
     },
+    audio: {
+      supported: false,
+      recorder: null,
+      stream: null,
+      chunks: [],
+      status: "idle",
+      mimeType: "",
+      startedAt: null,
+      durationMs: 0,
+      error: "",
+      transcriptBase: "",
+      lastAudioAssetId: "",
+    },
     currentDocId: null,
     showDemoNotice: false,
     showCreateInterview: false,
@@ -387,10 +423,11 @@
 
   initializeBackend();
   initializeSpeech();
+  initializeAudioRecording();
   normalizeSeedState();
   window.addEventListener("hashchange", render);
   window.addEventListener("popstate", render);
-  window.addEventListener("beforeunload", stopSpeechIfNeeded);
+  window.addEventListener("beforeunload", stopCaptureIfNeeded);
   render();
 
   function dictionary() {
@@ -413,6 +450,14 @@
 
   function backendAvailable() {
     return appState.backend.configured;
+  }
+
+  function getTranscriptionEndpoint() {
+    const config = getBackendConfig();
+    if (!config.supabaseUrl) {
+      return "";
+    }
+    return `${config.supabaseUrl.replace(/\/$/, "")}/functions/v1/transcribe-answer`;
   }
 
   function getStoredManagerTokens() {
@@ -2052,9 +2097,312 @@
     }
   }
 
+  function stopCaptureIfNeeded() {
+    stopSpeechIfNeeded();
+    stopAudioStream();
+  }
+
   function resetSpeechForLanguage() {
     stopSpeechIfNeeded();
     initializeSpeech();
+  }
+
+  function initializeAudioRecording() {
+    appState.audio.supported = Boolean(window.MediaRecorder && navigator.mediaDevices?.getUserMedia);
+    appState.audio.mimeType = getSupportedAudioMimeType();
+  }
+
+  function getSupportedAudioMimeType() {
+    if (!window.MediaRecorder?.isTypeSupported) {
+      return "";
+    }
+
+    return AUDIO_MIME_CANDIDATES.find((mimeType) => window.MediaRecorder.isTypeSupported(mimeType)) || "";
+  }
+
+  function resetAudioRecordingState(nextStatus = "idle") {
+    appState.audio.status = nextStatus;
+    appState.audio.error = "";
+    appState.audio.chunks = [];
+    appState.audio.durationMs = 0;
+    appState.audio.startedAt = null;
+    appState.audio.lastAudioAssetId = "";
+  }
+
+  function isRemoteAudioSession(session) {
+    return Boolean(session?.source === "supabase" && backendAvailable());
+  }
+
+  function isAudioBusy() {
+    return ["recording", "uploading", "transcribing"].includes(appState.audio.status);
+  }
+
+  function getAudioStatusLabel() {
+    const copy = dictionary();
+    if (!appState.audio.supported) {
+      return copy.recordingUnsupported;
+    }
+
+    switch (appState.audio.status) {
+      case "recording":
+        return copy.recordingActive;
+      case "uploading":
+        return copy.uploadingAudio;
+      case "transcribing":
+        return copy.transcribingAudio;
+      case "ready":
+        return copy.transcriptReady;
+      case "failed":
+        return appState.audio.error || copy.transcriptionFailed;
+      case "denied":
+        return copy.speechDenied;
+      case "unsupported":
+        return copy.recordingUnsupported;
+      default:
+        return copy.recordingIdle;
+    }
+  }
+
+  function getAudioButtonLabel(session) {
+    const copy = dictionary();
+    if (!isRemoteAudioSession(session)) {
+      return appState.speech.listening ? copy.stopMicrophone : copy.startMicrophone;
+    }
+
+    if (appState.audio.status === "recording") {
+      return copy.stopMicrophone;
+    }
+
+    if (isAudioBusy()) {
+      return copy.transcribingAudio;
+    }
+
+    return copy.startMicrophone;
+  }
+
+  function getAudioStatusClass() {
+    return appState.audio.status === "recording" ? "live" : "";
+  }
+
+  function getCaptureStatusClass(session) {
+    return isRemoteAudioSession(session)
+      ? getAudioStatusClass()
+      : appState.speech.listening
+        ? "live"
+        : "";
+  }
+
+  function isCaptureBusy(session) {
+    return isRemoteAudioSession(session) && isAudioBusy();
+  }
+
+  async function toggleAudioCapture(session) {
+    if (!isRemoteAudioSession(session)) {
+      toggleLocalSpeechRecognition();
+      return;
+    }
+
+    if (!appState.audio.supported) {
+      appState.audio.status = "unsupported";
+      appState.audio.error = dictionary().recordingUnsupported;
+      render();
+      return;
+    }
+
+    if (appState.audio.status === "recording") {
+      stopRemoteAudioRecording();
+      return;
+    }
+
+    if (isCaptureBusy(session)) {
+      return;
+    }
+
+    await startRemoteAudioRecording(session);
+  }
+
+  function toggleLocalSpeechRecognition() {
+    if (!appState.speech.supported || !appState.speech.recognition) {
+      appState.speech.status = "unavailable";
+      render();
+      return;
+    }
+
+    if (appState.speech.listening) {
+      appState.speech.recognition.stop();
+      return;
+    }
+
+    appState.speech.transcriptBase = appState.draftAnswer.trim();
+    appState.speech.recognition.lang = appState.language === "fr" ? "fr-FR" : "en-AU";
+    try {
+      appState.speech.recognition.start();
+    } catch {
+      appState.speech.status = "error";
+      render();
+    }
+  }
+
+  async function startRemoteAudioRecording(session) {
+    try {
+      stopSpeechIfNeeded();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = appState.audio.mimeType || getSupportedAudioMimeType();
+      const options = mimeType ? { mimeType } : undefined;
+      const recorder = new MediaRecorder(stream, options);
+      appState.audio.stream = stream;
+      appState.audio.recorder = recorder;
+      appState.audio.chunks = [];
+      appState.audio.status = "recording";
+      appState.audio.error = "";
+      appState.audio.startedAt = Date.now();
+      appState.audio.transcriptBase = appState.draftAnswer.trim();
+
+      recorder.ondataavailable = (event) => {
+        if (event.data?.size > 0) {
+          appState.audio.chunks.push(event.data);
+        }
+      };
+
+      recorder.onerror = () => {
+        appState.audio.status = "failed";
+        appState.audio.error = dictionary().speechError;
+        stopAudioStream();
+        render();
+      };
+
+      recorder.onstop = () => {
+        const durationMs = appState.audio.startedAt ? Date.now() - appState.audio.startedAt : 0;
+        const chunks = [...appState.audio.chunks];
+        const type = recorder.mimeType || mimeType || chunks[0]?.type || "audio/webm";
+        stopAudioStream();
+        if (!chunks.length) {
+          appState.audio.status = "failed";
+          appState.audio.error = dictionary().speechError;
+          render();
+          return;
+        }
+
+        const audioBlob = new Blob(chunks, { type });
+        appState.audio.durationMs = durationMs;
+        uploadRemoteAudioForTranscription(session, audioBlob, durationMs).catch((error) => {
+          appState.audio.status = "failed";
+          appState.audio.error = error.message || dictionary().transcriptionFailed;
+          render();
+        });
+      };
+
+      recorder.start();
+      render();
+    } catch (error) {
+      appState.audio.status = error?.name === "NotAllowedError" ? "denied" : "failed";
+      appState.audio.error = error?.name === "NotAllowedError" ? dictionary().speechDenied : dictionary().speechError;
+      stopAudioStream();
+      render();
+    }
+  }
+
+  function stopRemoteAudioRecording() {
+    const recorder = appState.audio.recorder;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+      return;
+    }
+
+    stopAudioStream();
+  }
+
+  function stopAudioStream() {
+    if (appState.audio.stream) {
+      appState.audio.stream.getTracks().forEach((track) => track.stop());
+    }
+    appState.audio.stream = null;
+    appState.audio.recorder = null;
+  }
+
+  async function uploadRemoteAudioForTranscription(session, audioBlob, durationMs) {
+    const endpoint = getTranscriptionEndpoint();
+    const config = getBackendConfig();
+    if (!endpoint || !config.supabaseAnonKey) {
+      throw new Error("Supabase transcription endpoint is not configured.");
+    }
+
+    appState.audio.status = "uploading";
+    appState.audio.error = "";
+    render();
+
+    const statusTimer = window.setTimeout(() => {
+      if (appState.audio.status === "uploading") {
+        appState.audio.status = "transcribing";
+        render();
+      }
+    }, 900);
+
+    const formData = new FormData();
+    formData.append("public_token", session.token || "");
+    formData.append("theme_id", session.currentSectionId || "");
+    formData.append("language", appState.language);
+    formData.append("duration_ms", String(Math.max(0, Math.round(durationMs || 0))));
+    formData.append("audio", audioBlob, `answer.${getAudioFileExtension(audioBlob.type)}`);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          apikey: config.supabaseAnonKey,
+        },
+        body: formData,
+      });
+      const payload = await response.json().catch(() => ({}));
+      window.clearTimeout(statusTimer);
+
+      if (!response.ok) {
+        const message = payload?.audio_saved
+          ? dictionary().transcriptionFailed
+          : payload?.error || dictionary().speechError;
+        appState.audio.lastAudioAssetId = payload?.audio_asset_id || "";
+        throw new Error(message);
+      }
+
+      const transcript = String(payload?.transcript_text || "").trim();
+      appState.audio.status = "ready";
+      appState.audio.lastAudioAssetId = payload?.audio_asset_id || "";
+      if (transcript) {
+        applyTranscriptToDraft(session, transcript);
+      }
+      render();
+    } catch (error) {
+      window.clearTimeout(statusTimer);
+      throw error;
+    }
+  }
+
+  function getAudioFileExtension(mimeType) {
+    const clean = String(mimeType || "").split(";")[0].trim().toLowerCase();
+    switch (clean) {
+      case "audio/mp4":
+        return "mp4";
+      case "audio/mpeg":
+      case "audio/mp3":
+        return "mp3";
+      case "audio/wav":
+      case "audio/x-wav":
+        return "wav";
+      case "audio/ogg":
+        return "ogg";
+      case "audio/m4a":
+        return "m4a";
+      case "audio/webm":
+      default:
+        return "webm";
+    }
+  }
+
+  function applyTranscriptToDraft(session, transcript) {
+    const base = appState.audio.transcriptBase || appState.draftAnswer.trim();
+    appState.draftAnswer = base ? `${base}\n${transcript}` : transcript;
+    patchTextareaValue();
+    saveDraftForSession(session, appState.draftAnswer);
   }
 
   function escapeHtml(value) {
@@ -2518,12 +2866,12 @@
           <p class="question-meta">${copy.themeLabel} : ${escapeHtml(getSectionTitle(session.currentSectionId))}</p>
           <h1 class="expert-question">${escapeHtml(activeQuestion ? activeQuestion.content : getSectionQuestion(session.currentSectionId))}</h1>
           <div class="dictaphone-panel simple">
-            <button class="${appState.speech.listening ? "button microphone-button live" : "button microphone-button"}" data-action="toggle-microphone">
-              ${appState.speech.listening ? copy.stopMicrophone : copy.startMicrophone}
+            <button class="${getCaptureStatusClass(session) ? "button microphone-button live" : "button microphone-button"}" data-action="toggle-microphone" ${isCaptureBusy(session) && appState.audio.status !== "recording" ? "disabled" : ""}>
+              ${escapeHtml(getAudioButtonLabel(session))}
             </button>
             <p class="micro-status">
-              <span class="dot ${appState.speech.listening ? "live" : ""}"></span>
-              ${appState.speech.listening ? copy.micRecording : copy.micStopped}
+              <span class="dot ${getCaptureStatusClass(session)}"></span>
+              ${escapeHtml(isRemoteAudioSession(session) ? getAudioStatusLabel() : appState.speech.listening ? copy.micRecording : copy.micStopped)}
             </p>
           </div>
           <div class="transcription-block">
@@ -2537,7 +2885,7 @@
             }
           </div>
           <div class="expert-actions">
-            <button class="button expert-primary" data-action="submit-answer">${copy.sendAnswer}</button>
+            <button class="button expert-primary" data-action="submit-answer" ${isCaptureBusy(session) ? "disabled" : ""}>${copy.sendAnswer}</button>
             <button class="button-secondary expert-secondary" data-action="pause-interview">${copy.pauseInterview}</button>
           </div>
           <p class="footer-note" id="save-status">${copy.savedAt} ${escapeHtml(formatTime(session.draftUpdatedAt || session.updatedAt))} · ${copy.saveNotice}</p>
@@ -3206,25 +3554,7 @@
     const micButton = document.querySelector("[data-action='toggle-microphone']");
     if (micButton) {
       micButton.addEventListener("click", () => {
-        if (!appState.speech.supported || !appState.speech.recognition) {
-          appState.speech.status = "unavailable";
-          render();
-          return;
-        }
-
-        if (appState.speech.listening) {
-          appState.speech.recognition.stop();
-          return;
-        }
-
-        appState.speech.transcriptBase = appState.draftAnswer.trim();
-        appState.speech.recognition.lang = appState.language === "fr" ? "fr-FR" : "en-AU";
-        try {
-          appState.speech.recognition.start();
-        } catch {
-          appState.speech.status = "error";
-          render();
-        }
+        toggleAudioCapture(session);
       });
     }
 
@@ -3297,6 +3627,10 @@
       return;
     }
 
+    if (isCaptureBusy(session)) {
+      return;
+    }
+
     const value = appState.draftAnswer.trim();
     if (!value) {
       return;
@@ -3312,6 +3646,7 @@
           nextSession.draftUpdatedAt = new Date().toISOString();
           upsertSessionInMemory(nextSession);
         }
+        resetAudioRecordingState();
         render();
       } catch (error) {
         appState.backend.managerError = error.message || "La réponse n’a pas pu être sauvegardée.";
@@ -3330,6 +3665,7 @@
     saveSession(nextSession);
     saveDocument(generateDocument(nextSession));
     appState.draftAnswer = "";
+    resetAudioRecordingState();
     render();
   }
 

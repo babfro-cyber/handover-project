@@ -630,6 +630,13 @@ button {
   border-color: #b33737;
 }
 
+.button:disabled,
+.button-secondary:disabled,
+.microphone-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .resume-banner {
   display: inline-flex;
   margin: 12px 0 0;
