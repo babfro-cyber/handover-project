@@ -140,7 +140,7 @@
       recordingActive: "Enregistrement en cours",
       uploadingAudio: "Audio en cours de sauvegarde",
       transcribingAudio: "Transcription en cours",
-      transcriptReady: "Transcription prête. Vous pouvez la corriger avant de valider.",
+      transcriptReady: "Transcription prête. Relisez et corrigez si besoin avant de valider.",
       transcriptionFailed: "La transcription a échoué, mais l’audio est sauvegardé. Vous pouvez continuer par écrit.",
       recordingUnsupported: "L’enregistrement audio n’est pas disponible dans ce navigateur. Vous pouvez continuer par écrit.",
       sendAnswer: "Valider la réponse",
@@ -203,7 +203,7 @@
       confidenceStrong: "renseigné",
       confidencePartial: "réponse partielle",
       confidenceNeeds: "à compléter",
-      saveNotice: "Sauvegardé localement",
+      saveNotice: "Sauvegardé",
       savedAt: "Sauvegardé à",
       sectionDrilledBlock: "Blocs forés",
       sectionSchematics: "Schémas et besoin client",
@@ -341,7 +341,7 @@
       confidenceStrong: "strong",
       confidencePartial: "partial",
       confidenceNeeds: "needs clarification",
-      saveNotice: "Saved locally",
+      saveNotice: "Saved",
       sectionRole: "role",
       sectionTasks: "tasks",
       sectionProcess: "process",
@@ -2877,6 +2877,11 @@
           <div class="transcription-block">
             <label class="label" for="answer-input">${copy.yourAnswer}</label>
             <textarea id="answer-input" class="textarea expert-textarea" placeholder="${escapeHtml(copy.speechHint)}">${escapeHtml(appState.draftAnswer)}</textarea>
+            ${
+              isRemoteAudioSession(session) && appState.audio.status === "ready"
+                ? `<p class="transcript-review-note">${escapeHtml(copy.transcriptReady)}</p>`
+                : ""
+            }
             <p class="helper-note">${copy.submitHint}</p>
             ${
               backendAvailable() && session.source === "supabase" && appState.backend.managerError
@@ -2927,6 +2932,16 @@
     return answer.length > 132 ? `${answer.slice(0, 129)}...` : answer;
   }
 
+  function renderFullAnswerDisclosure(answer) {
+    if (!answer || answer.length <= 132) return "";
+    return `
+      <details class="answer-disclosure">
+        <summary>Voir la réponse complète</summary>
+        <p>${escapeHtml(answer)}</p>
+      </details>
+    `;
+  }
+
   function getThemeOpenQuestions(answers) {
     const combined = answers.join(" ");
     const gaps = [];
@@ -2954,11 +2969,13 @@
   }
 
   function renderThemeFicheCard(session, themeId) {
+    const firstAnswer = getThemeAnswersForSession(session, themeId)[0] || "";
     return `
       <article class="theme-card synthesis-fiche-card">
         <div>
           <span>${escapeHtml(getSectionTitle(themeId))}</span>
           <p class="helper-note fiche-preview">${escapeHtml(getThemePreview(session, themeId))}</p>
+          ${renderFullAnswerDisclosure(firstAnswer)}
         </div>
         <strong>${escapeHtml(getThemeFicheStatus(session, themeId))}</strong>
         <button class="button-secondary" data-action="open-doc-section" data-section-id="${escapeHtml(themeId)}">Ouvrir la fiche</button>

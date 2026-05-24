@@ -449,6 +449,25 @@ button {
   margin-top: 6px;
 }
 
+.answer-disclosure {
+  margin-top: 8px;
+}
+
+.answer-disclosure summary {
+  cursor: pointer;
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.answer-disclosure p {
+  margin: 8px 0 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
 .stat {
   padding: 14px 16px;
   border-radius: var(--radius-soft);
@@ -706,6 +725,13 @@ button {
 
 .transcription-block {
   margin-top: 24px;
+}
+
+.transcript-review-note {
+  margin: 10px 0 0;
+  color: var(--ok);
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .expert-textarea {

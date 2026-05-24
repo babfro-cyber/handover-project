@@ -40,3 +40,15 @@ DigitalOcean should serve the generated `dist` directory:
 3. Copy the project URL and public anon key from Supabase Project Settings > API.
 4. Add the variables above to DigitalOcean App Platform.
 5. Redeploy the static site. The build command writes `dist/env.js` from those variables.
+
+## Phase 2 real-device test checklist
+
+- Test recording on desktop Chrome with the real microphone.
+- Test recording on mobile Safari/iPhone if available.
+- Submit a short 30-second recording.
+- Submit a longer 2-3 minute recording.
+- Start, stop, and restart recording before submitting.
+- Refresh the expert page after submitting and confirm progress is preserved.
+- Confirm the manager can see the full submitted answer.
+- Confirm rows exist in Supabase `audio_assets`, `transcripts`, and `text_answers`.
+- Confirm the audio object exists in the private `answer-audio` Storage bucket.
