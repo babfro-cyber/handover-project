@@ -40,6 +40,7 @@
     "audio/mpeg",
     "audio/wav",
   ];
+  const MAX_REMOTE_FOLLOWUPS = 2;
 
   const dictionaries = {
     fr: {
@@ -137,13 +138,19 @@
       speechHint: "Parlez, puis corrigez la transcription si nécessaire avant de valider.",
       recordingStatus: "Enregistrement",
       recordingIdle: "Prêt à enregistrer",
-      recordingActive: "Enregistrement en cours",
-      uploadingAudio: "Audio en cours de sauvegarde",
-      transcribingAudio: "Transcription en cours",
+      recordingActive: "Enregistrement en cours…",
+      uploadingAudio: "Sauvegarde de l’audio…",
+      transcribingAudio: "Transcription en cours…",
       transcriptReady: "Transcription prête. Relisez et corrigez si besoin avant de valider.",
       transcriptionFailed: "La transcription a échoué, mais l’audio est sauvegardé. Vous pouvez continuer par écrit.",
       recordingUnsupported: "L’enregistrement audio n’est pas disponible dans ce navigateur. Vous pouvez continuer par écrit.",
       analyzingAnswer: "Analyse de la réponse…",
+      preparingNextQuestion: "Préparation de la prochaine question…",
+      listenQuestion: "Écouter la question",
+      aiVoiceDisclosure: "Voix générée par IA.",
+      questionAudioLoading: "Préparation de la voix…",
+      questionAudioReady: "Lecture de la question disponible.",
+      questionAudioFailed: "La lecture audio n’a pas pu démarrer. La question écrite reste disponible.",
       sendAnswer: "Valider la réponse",
       submitHint: "Le texte reste éditable si la transcription est imparfaite.",
       hintsTitle: "Repères utiles",
@@ -282,13 +289,19 @@
       speechHint: "Speak naturally, then review the text before sending.",
       recordingStatus: "Recording",
       recordingIdle: "Ready to record",
-      recordingActive: "Recording",
-      uploadingAudio: "Saving audio",
-      transcribingAudio: "Transcribing",
+      recordingActive: "Recording…",
+      uploadingAudio: "Saving audio…",
+      transcribingAudio: "Transcribing…",
       transcriptReady: "Transcript ready. You can edit it before sending.",
       transcriptionFailed: "Transcription failed, but the audio is saved. You can keep typing.",
       recordingUnsupported: "Audio recording is not available in this browser. You can keep typing.",
       analyzingAnswer: "Analyzing answer…",
+      preparingNextQuestion: "Preparing the next question…",
+      listenQuestion: "Listen to question",
+      aiVoiceDisclosure: "AI-generated voice.",
+      questionAudioLoading: "Preparing voice…",
+      questionAudioReady: "Question audio ready.",
+      questionAudioFailed: "Audio playback could not start. The written question remains available.",
       sendAnswer: "Send",
       submitHint: "Enter to send. Shift + Enter for a new line.",
       hintsTitle: "Helpful cues",
@@ -421,7 +434,16 @@
       managerError: "",
       publicLoads: {},
       aiDecisionLoading: false,
+      aiDecisionStatus: "idle",
     },
+    questionAudio: {
+      status: "idle",
+      error: "",
+      objectUrl: "",
+      audio: null,
+      questionKey: "",
+    },
+    pendingQuestionScroll: false,
   };
 
   initializeBackend();
@@ -469,6 +491,14 @@
       return "";
     }
     return `${config.supabaseUrl.replace(/\/$/, "")}/functions/v1/decide-next-question`;
+  }
+
+  function getQuestionSpeechEndpoint() {
+    const config = getBackendConfig();
+    if (!config.supabaseUrl) {
+      return "";
+    }
+    return `${config.supabaseUrl.replace(/\/$/, "")}/functions/v1/speak-question`;
   }
 
   function getStoredManagerTokens() {
@@ -1522,6 +1552,15 @@
     ).length;
   }
 
+  function isValidRemoteFollowUpDecision(decision, session) {
+    return Boolean(
+      decision?.action === "ask_followup" &&
+        decision.theme_id === session.currentSectionId &&
+        decision.followup_text &&
+        getAcceptedFollowUpCount(session) < MAX_REMOTE_FOLLOWUPS,
+    );
+  }
+
   async function createRemoteInterview({ expertName, profile, selectedThemeIds }) {
     const config = getBackendConfig();
     const managerToken = config.managerToken || createToken();
@@ -1627,7 +1666,7 @@
         selected_themes: selectedThemes,
         plan,
         previous_followup_count: getAcceptedFollowUpCount(session),
-        max_followups: 1,
+        max_followups: MAX_REMOTE_FOLLOWUPS,
       }),
     });
 
@@ -2239,6 +2278,7 @@
   function stopCaptureIfNeeded() {
     stopSpeechIfNeeded();
     stopAudioStream();
+    stopQuestionAudio();
   }
 
   function resetSpeechForLanguage() {
@@ -2266,6 +2306,100 @@
     appState.audio.durationMs = 0;
     appState.audio.startedAt = null;
     appState.audio.lastAudioAssetId = "";
+  }
+
+  function getQuestionAudioKey(session, questionText) {
+    return `${session?.id || ""}:${session?.currentSectionId || ""}:${questionText || ""}`;
+  }
+
+  function resetQuestionAudioState() {
+    stopQuestionAudio();
+    appState.questionAudio.status = "idle";
+    appState.questionAudio.error = "";
+    appState.questionAudio.questionKey = "";
+  }
+
+  function stopQuestionAudio() {
+    if (appState.questionAudio.audio) {
+      appState.questionAudio.audio.pause();
+      appState.questionAudio.audio = null;
+    }
+    if (appState.questionAudio.objectUrl) {
+      URL.revokeObjectURL(appState.questionAudio.objectUrl);
+      appState.questionAudio.objectUrl = "";
+    }
+  }
+
+  function getQuestionAudioStatusLabel() {
+    const copy = dictionary();
+    switch (appState.questionAudio.status) {
+      case "loading":
+        return copy.questionAudioLoading;
+      case "ready":
+        return copy.questionAudioReady;
+      case "failed":
+        return appState.questionAudio.error || copy.questionAudioFailed;
+      default:
+        return "";
+    }
+  }
+
+  async function playQuestionAudio(session, questionText) {
+    const endpoint = getQuestionSpeechEndpoint();
+    const config = getBackendConfig();
+    if (!endpoint || !config.supabaseAnonKey || !session?.token || !questionText) {
+      return;
+    }
+
+    const questionKey = getQuestionAudioKey(session, questionText);
+    if (appState.questionAudio.status === "loading" && appState.questionAudio.questionKey === questionKey) {
+      return;
+    }
+
+    stopQuestionAudio();
+    appState.questionAudio.status = "loading";
+    appState.questionAudio.error = "";
+    appState.questionAudio.questionKey = questionKey;
+    render();
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          apikey: config.supabaseAnonKey,
+          Authorization: `Bearer ${config.supabaseAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          public_token: session.token,
+          theme_id: session.currentSectionId,
+          question_text: questionText,
+          language: appState.language,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error || dictionary().questionAudioFailed);
+      }
+
+      const audioBlob = await response.blob();
+      const objectUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(objectUrl);
+      appState.questionAudio.status = "ready";
+      appState.questionAudio.objectUrl = objectUrl;
+      appState.questionAudio.audio = audio;
+      render();
+      audio.play().catch(() => {
+        appState.questionAudio.status = "ready";
+        render();
+      });
+    } catch (error) {
+      stopQuestionAudio();
+      appState.questionAudio.status = "failed";
+      appState.questionAudio.error = error.message || dictionary().questionAudioFailed;
+      render();
+    }
   }
 
   function isRemoteAudioSession(session) {
@@ -2569,6 +2703,10 @@
     }
     bindCommonEvents();
     bindViewEvents(route);
+    if (appState.pendingQuestionScroll) {
+      appState.pendingQuestionScroll = false;
+      window.requestAnimationFrame(scrollQuestionIntoView);
+    }
   }
 
   function scrollPageTop() {
@@ -2576,6 +2714,13 @@
     document.body.scrollTop = 0;
     if (typeof window.scrollTo === "function") {
       window.scrollTo(0, 0);
+    }
+  }
+
+  function scrollQuestionIntoView() {
+    const target = document.querySelector(".question-focus");
+    if (target?.scrollIntoView) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
 
@@ -2991,6 +3136,10 @@
     const answeredCount = getAnsweredThemeCount(session);
     const progressPercent = Math.round((answeredCount / totalQuestions) * 100);
     const isSubmitBusy = isCaptureBusy(session) || (session.source === "supabase" && appState.backend.aiDecisionLoading);
+    const activeQuestionText = activeQuestion ? activeQuestion.content : getSectionQuestion(session.currentSectionId);
+    const questionAudioKey = getQuestionAudioKey(session, activeQuestionText);
+    const hasCurrentQuestionAudio = appState.questionAudio.questionKey === questionAudioKey;
+    const questionAudioStatus = hasCurrentQuestionAudio ? getQuestionAudioStatusLabel() : "";
 
     return `
       <div class="expert-shell">
@@ -3002,7 +3151,23 @@
           </div>
           <div class="progress-meter expert-meter"><span style="width:${Math.max(6, progressPercent)}%;"></span></div>
           <p class="question-meta">${copy.themeLabel} : ${escapeHtml(getSectionTitle(session.currentSectionId))}</p>
-          <h1 class="expert-question">${escapeHtml(activeQuestion ? activeQuestion.content : getSectionQuestion(session.currentSectionId))}</h1>
+          <h1 class="expert-question">${escapeHtml(activeQuestionText)}</h1>
+          ${
+            session.source === "supabase" && backendAvailable()
+              ? `<div class="question-listen">
+                  <button class="button-secondary question-listen-button" data-action="listen-question" ${hasCurrentQuestionAudio && appState.questionAudio.status === "loading" ? "disabled" : ""}>
+                    ${escapeHtml(copy.listenQuestion)}
+                  </button>
+                  <span class="question-voice-disclosure">${escapeHtml(copy.aiVoiceDisclosure)}</span>
+                  ${questionAudioStatus ? `<p class="helper-note question-audio-status">${escapeHtml(questionAudioStatus)}</p>` : ""}
+                  ${
+                    hasCurrentQuestionAudio && appState.questionAudio.status === "ready" && appState.questionAudio.objectUrl
+                      ? `<audio class="question-audio-player" controls src="${escapeHtml(appState.questionAudio.objectUrl)}"></audio>`
+                      : ""
+                  }
+                </div>`
+              : ""
+          }
           <div class="dictaphone-panel simple">
             <button class="${getCaptureStatusClass(session) ? "button microphone-button live" : "button microphone-button"}" data-action="toggle-microphone" ${isCaptureBusy(session) && appState.audio.status !== "recording" ? "disabled" : ""}>
               ${escapeHtml(getAudioButtonLabel(session))}
@@ -3023,7 +3188,9 @@
             <p class="helper-note">${copy.submitHint}</p>
             ${
               session.source === "supabase" && appState.backend.aiDecisionLoading
-                ? `<p class="transcript-review-note">${escapeHtml(copy.analyzingAnswer)}</p>`
+                ? `<p class="transcript-review-note">${escapeHtml(
+                    appState.backend.aiDecisionStatus === "preparing" ? copy.preparingNextQuestion : copy.analyzingAnswer,
+                  )}</p>`
                 : ""
             }
             ${
@@ -3718,6 +3885,13 @@
       });
     }
 
+    const listenButton = document.querySelector("[data-action='listen-question']");
+    if (listenButton) {
+      listenButton.addEventListener("click", () => {
+        playQuestionAudio(session, getCurrentQuestionText(session));
+      });
+    }
+
     document.querySelectorAll("[data-action='submit-answer']").forEach((button) => {
       button.addEventListener("click", () => submitCurrentAnswer(session));
     });
@@ -3808,46 +3982,38 @@
           : value;
 
       try {
-        appState.backend.aiDecisionLoading = !answeringFollowUp;
+        appState.backend.aiDecisionLoading = true;
+        appState.backend.aiDecisionStatus = "analyzing";
         appState.backend.managerError = "";
         render();
 
         let nextSession = null;
-        if (answeringFollowUp) {
-          nextSession = await submitRemoteTextAnswer(session, answerToSave, {
+        const savedSession = await submitRemoteTextAnswer(session, answerToSave, {
+          advance: false,
+          questionText: fixedQuestionText,
+        });
+        let decision = null;
+        try {
+          decision = await decideRemoteNextQuestion(savedSession || session, value, questionText);
+        } catch (decisionError) {
+          await logRemoteAiFallback(
+            savedSession || session,
+            value,
+            questionText,
+            decisionError.message || "AI decision endpoint failed",
+          );
+        }
+
+        appState.backend.aiDecisionStatus = "preparing";
+        render();
+
+        if (isValidRemoteFollowUpDecision(decision, savedSession || session)) {
+          nextSession = await loadRemoteInterviewByToken(session.token);
+        } else {
+          nextSession = await submitRemoteTextAnswer(savedSession || session, answerToSave, {
             advance: true,
             questionText: fixedQuestionText,
           });
-        } else {
-          const savedSession = await submitRemoteTextAnswer(session, answerToSave, {
-            advance: false,
-            questionText,
-          });
-          let decision = null;
-          try {
-            decision = await decideRemoteNextQuestion(savedSession || session, answerToSave, questionText);
-          } catch (decisionError) {
-            await logRemoteAiFallback(
-              savedSession || session,
-              answerToSave,
-              questionText,
-              decisionError.message || "AI decision endpoint failed",
-            );
-          }
-
-          if (
-            decision?.action === "ask_followup" &&
-            decision.theme_id === session.currentSectionId &&
-            decision.followup_text &&
-            getAcceptedFollowUpCount(savedSession || session) < 1
-          ) {
-            nextSession = await loadRemoteInterviewByToken(session.token);
-          } else {
-            nextSession = await submitRemoteTextAnswer(savedSession || session, answerToSave, {
-              advance: true,
-              questionText: fixedQuestionText,
-            });
-          }
         }
 
         appState.draftAnswer = "";
@@ -3857,10 +4023,14 @@
           upsertSessionInMemory(nextSession);
         }
         resetAudioRecordingState();
+        resetQuestionAudioState();
         appState.backend.aiDecisionLoading = false;
+        appState.backend.aiDecisionStatus = "idle";
+        appState.pendingQuestionScroll = true;
         render();
       } catch (error) {
         appState.backend.aiDecisionLoading = false;
+        appState.backend.aiDecisionStatus = "idle";
         appState.backend.managerError = error.message || "La réponse n’a pas pu être sauvegardée.";
         render();
       }
@@ -3878,6 +4048,8 @@
     saveDocument(generateDocument(nextSession));
     appState.draftAnswer = "";
     resetAudioRecordingState();
+    resetQuestionAudioState();
+    appState.pendingQuestionScroll = true;
     render();
   }
 

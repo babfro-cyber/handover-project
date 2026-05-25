@@ -710,6 +710,38 @@ button {
   line-height: 1.12;
 }
 
+.question-listen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 16px;
+}
+
+.question-listen-button {
+  width: auto;
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.question-voice-disclosure,
+.question-audio-status {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.question-audio-status {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.question-audio-player {
+  flex-basis: 100%;
+  width: min(100%, 420px);
+  height: 40px;
+}
+
 .expert-progress-line {
   display: flex;
   justify-content: space-between;

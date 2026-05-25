@@ -6,7 +6,7 @@ const corsHeaders = {
 
 const ALLOWED_ACTIONS = ["ask_followup", "next_question", "next_theme", "finish_interview"] as const;
 const DEFAULT_DECISION_MODEL = "gpt-4o-mini";
-const DEFAULT_MAX_FOLLOWUPS = 1;
+const DEFAULT_MAX_FOLLOWUPS = 2;
 
 type AllowedAction = (typeof ALLOWED_ACTIONS)[number];
 
@@ -156,7 +156,7 @@ function isUnknownAnswer(answer: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
 
-  return /^(je ne sais pas|j'?en sais rien|aucune idee|pas d'?idee|je sais pas|no idea|i don'?t know)\b/.test(normalized);
+  return /^(je ne sais pas|je ne me souviens pas|je m'?en souviens pas|je ne me rappelle pas|je m'?en rappelle pas|j'?en sais rien|aucune idee|pas d'?idee|je sais pas|je suis bloque|je suis bloquee|no idea|i don'?t know)\b/.test(normalized);
 }
 
 function deterministicAction(selectedThemes: string[], themeId: string): AllowedAction {
@@ -317,7 +317,7 @@ async function askOpenAi(
         {
           role: "system",
           content:
-            "You are a controlled NumerHyd interview decision engine. The fixed plan is the source of truth. You do not conduct an open-ended interview. You may suggest at most one useful follow-up within the current theme, or move on. Never introduce new themes, never reorder themes, never ask broad chatbot questions, and never ask about anything outside the current theme.",
+            "You are a controlled NumerHyd interview decision engine. The fixed plan is the source of truth. You do not conduct an open-ended interview. You may suggest a useful follow-up within the current theme, or move on. Never introduce new themes, never reorder themes, never ask broad chatbot questions, and never ask about anything outside the current theme. Always return the current theme_id, even when moving on.",
         },
         {
           role: "user",
@@ -330,12 +330,16 @@ async function askOpenAi(
             previous_followup_count: previousFollowupCount,
             max_followups: maxFollowups,
             rules: [
-              "If the answer is vague but relevant, action should be ask_followup.",
-              "For answers like 'ca depend du cas', ask one concrete follow-up within the same theme.",
               "If the answer is rich and specific, move to next_theme or finish_interview.",
+              "If the answer is useful but incomplete and previous_followup_count is 0, action should be ask_followup.",
+              "If the answer is very short, vague, generic, or superficial and previous_followup_count is below max_followups, action should be ask_followup.",
+              "If previous_followup_count is 1 and the latest answer is still shallow, ask a second and final follow-up that pushes for a concrete customer case, example, trade-off, or decision rule.",
+              "For answers like 'ca depend du cas', ask a concrete follow-up within the same theme.",
+              "Follow-up priority: clarify the answer, get a concrete example or customer case, extract reasoning/trade-off/decision rule.",
               "If the answer is off-topic, do not follow the tangent; move to next_theme or finish_interview.",
-              "If the expert says they do not know, move on.",
+              "If the expert says they do not know, do not remember, or seems blocked, move on.",
               "followup_text must be French, concise, and specific to the current NumerHyd theme.",
+              "Never ask more than max_followups follow-ups for this theme/question.",
             ],
           }),
         },
