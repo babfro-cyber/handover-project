@@ -143,6 +143,7 @@
       transcriptReady: "Transcription prête. Relisez et corrigez si besoin avant de valider.",
       transcriptionFailed: "La transcription a échoué, mais l’audio est sauvegardé. Vous pouvez continuer par écrit.",
       recordingUnsupported: "L’enregistrement audio n’est pas disponible dans ce navigateur. Vous pouvez continuer par écrit.",
+      analyzingAnswer: "Analyse de la réponse…",
       sendAnswer: "Valider la réponse",
       submitHint: "Le texte reste éditable si la transcription est imparfaite.",
       hintsTitle: "Repères utiles",
@@ -287,6 +288,7 @@
       transcriptReady: "Transcript ready. You can edit it before sending.",
       transcriptionFailed: "Transcription failed, but the audio is saved. You can keep typing.",
       recordingUnsupported: "Audio recording is not available in this browser. You can keep typing.",
+      analyzingAnswer: "Analyzing answer…",
       sendAnswer: "Send",
       submitHint: "Enter to send. Shift + Enter for a new line.",
       hintsTitle: "Helpful cues",
@@ -418,6 +420,7 @@
       managerLoading: false,
       managerError: "",
       publicLoads: {},
+      aiDecisionLoading: false,
     },
   };
 
@@ -458,6 +461,14 @@
       return "";
     }
     return `${config.supabaseUrl.replace(/\/$/, "")}/functions/v1/transcribe-answer`;
+  }
+
+  function getDecisionEndpoint() {
+    const config = getBackendConfig();
+    if (!config.supabaseUrl) {
+      return "";
+    }
+    return `${config.supabaseUrl.replace(/\/$/, "")}/functions/v1/decide-next-question`;
   }
 
   function getStoredManagerTokens() {
@@ -1347,6 +1358,7 @@
     const interview = payload.interview;
     const plan = payload.plan || {};
     const answers = Array.isArray(payload.answers) ? payload.answers : [];
+    const decisions = Array.isArray(payload.ai_decisions) ? payload.ai_decisions : [];
     const themeIds = normalizeThemeIds(
       Array.isArray(interview.selected_theme_ids)
         ? interview.selected_theme_ids
@@ -1356,7 +1368,9 @@
       answers.some((answer) => answer.theme_id === themeId && answer.answer_text),
     );
     const firstUnansweredThemeId = themeIds.find((themeId) => !answeredThemeIds.includes(themeId));
-    const currentSectionId = firstUnansweredThemeId || interview.current_theme_id || themeIds[themeIds.length - 1];
+    const currentSectionId = themeIds.includes(interview.current_theme_id)
+      ? interview.current_theme_id
+      : firstUnansweredThemeId || themeIds[themeIds.length - 1];
     const completionPercent = Math.round((answeredThemeIds.length / Math.max(1, themeIds.length)) * 100);
     const expertNameParts = String(interview.expert_name || "Expert NumerHyd").trim().split(/\s+/).filter(Boolean);
     const firstName = expertNameParts[0] || "Expert";
@@ -1381,6 +1395,27 @@
           content: answer.answer_text,
           sectionId: themeId,
           createdAt: answer.created_at || answer.updated_at || interview.updated_at,
+        });
+      }
+
+      const followUpDecisions = decisions.filter(
+        (decision) =>
+          decision.theme_id === themeId &&
+          decision.action === "ask_followup" &&
+          decision.status === "accepted" &&
+          decision.followup_text,
+      );
+      const pendingFollowUp = followUpDecisions[followUpDecisions.length - 1];
+
+      if (pendingFollowUp && themeId === currentSectionId && interview.status !== "completed") {
+        messages.push({
+          id: pendingFollowUp.id,
+          role: "assistant",
+          content: pendingFollowUp.followup_text,
+          sectionId: themeId,
+          questionKind: "ai_followup",
+          decisionId: pendingFollowUp.id,
+          createdAt: pendingFollowUp.created_at || interview.updated_at,
         });
       }
     });
@@ -1409,6 +1444,7 @@
       partialSubmittedAt: null,
       completedAt: interview.completed_at || (interview.status === "completed" ? interview.updated_at : null),
       contextNote: "Entretien sauvegardé dans Supabase.",
+      aiDecisions: decisions,
       messages,
       sections: createSections(currentSectionId, themeIds).map((section) => ({
         ...section,
@@ -1458,6 +1494,34 @@
     };
   }
 
+  function getActiveQuestion(session) {
+    return [...(session?.messages || [])]
+      .reverse()
+      .find((item) => item.role === "assistant" && item.sectionId === session.currentSectionId);
+  }
+
+  function getCurrentQuestionText(session) {
+    const activeQuestion = getActiveQuestion(session);
+    return activeQuestion?.content || getSectionQuestion(session.currentSectionId);
+  }
+
+  function isAnsweringAiFollowUp(session) {
+    return getActiveQuestion(session)?.questionKind === "ai_followup";
+  }
+
+  function getExistingRemoteThemeAnswer(session) {
+    return [...(session?.messages || [])]
+      .reverse()
+      .find((item) => item.role === "user" && item.sectionId === session.currentSectionId)
+      ?.content || "";
+  }
+
+  function getAcceptedFollowUpCount(session, themeId = session?.currentSectionId) {
+    return (session?.aiDecisions || []).filter(
+      (decision) => decision.theme_id === themeId && decision.action === "ask_followup" && decision.status === "accepted",
+    ).length;
+  }
+
   async function createRemoteInterview({ expertName, profile, selectedThemeIds }) {
     const config = getBackendConfig();
     const managerToken = config.managerToken || createToken();
@@ -1484,9 +1548,15 @@
     return upsertSessionInMemory(session);
   }
 
-  async function submitRemoteTextAnswer(session, answerText) {
-    const next = getNextThemeAfterSubmit(session);
-    const questionText = getSectionQuestion(session.currentSectionId);
+  async function submitRemoteTextAnswer(session, answerText, options = {}) {
+    const shouldAdvance = options.advance !== false;
+    const next = shouldAdvance
+      ? getNextThemeAfterSubmit(session)
+      : {
+          nextThemeId: session.currentSectionId,
+          status: "in_progress",
+        };
+    const questionText = options.questionText || getSectionQuestion(session.currentSectionId);
     const payload = await callSupabaseRpc("submit_text_answer", {
       p_public_token: session.token,
       p_theme_id: session.currentSectionId,
@@ -1498,6 +1568,75 @@
     const nextSession = convertSupabaseRowsToCurrentSessionShape(payload);
     appState.backend.managerError = "";
     return upsertSessionInMemory(nextSession);
+  }
+
+  function getDeterministicRemoteAction(session) {
+    return getNextThemeAfterSubmit(session).status === "completed" ? "finish_interview" : "next_theme";
+  }
+
+  async function logRemoteAiFallback(session, answerText, questionText, errorMessage) {
+    try {
+      await callSupabaseRpc("insert_ai_decision_for_public_interview", {
+        p_public_token: session.token,
+        p_theme_id: session.currentSectionId,
+        p_question_id: `${session.currentSectionId}:frontend-fallback:${Date.now()}`,
+        p_question_text: questionText,
+        p_answer_text: answerText,
+        p_action: getDeterministicRemoteAction(session),
+        p_followup_text: "",
+        p_off_topic: false,
+        p_confidence: 1,
+        p_rationale: "Frontend fallback after AI decision endpoint failure.",
+        p_status: "error",
+        p_error_message: errorMessage || "AI decision endpoint failed",
+        p_raw_response: null,
+        p_validated_response: null,
+      });
+    } catch {
+      // The answer is already saved; never block the interview because fallback logging failed.
+    }
+  }
+
+  async function decideRemoteNextQuestion(session, answerText, questionText) {
+    const endpoint = getDecisionEndpoint();
+    const config = getBackendConfig();
+    if (!endpoint || !config.supabaseAnonKey) {
+      throw new Error("Supabase AI decision endpoint is not configured.");
+    }
+
+    const selectedThemes = getSessionThemeIds(session);
+    const plan = selectedThemes.map((themeId) => ({
+      id: themeId,
+      title: getSectionTitle(themeId),
+      question: getSectionQuestion(themeId),
+    }));
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        apikey: config.supabaseAnonKey,
+        Authorization: `Bearer ${config.supabaseAnonKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        public_token: session.token,
+        interview_id: session.id,
+        theme_id: session.currentSectionId,
+        current_question_text: questionText,
+        latest_answer_text: answerText,
+        selected_themes: selectedThemes,
+        plan,
+        previous_followup_count: getAcceptedFollowUpCount(session),
+        max_followups: 1,
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `AI decision failed with status ${response.status}`);
+    }
+
+    return payload;
   }
 
   async function loadRemoteManagerData() {
@@ -2845,14 +2984,13 @@
     }
 
     const themeIds = getSessionThemeIds(session);
-    const activeQuestion = [...session.messages]
-      .reverse()
-      .find((item) => item.role === "assistant" && item.sectionId === session.currentSectionId);
+    const activeQuestion = getActiveQuestion(session);
     const currentIndex = Math.max(0, themeIds.indexOf(session.currentSectionId));
     const totalQuestions = themeIds.length;
     const questionNumber = Math.min(totalQuestions, currentIndex + 1);
     const answeredCount = getAnsweredThemeCount(session);
     const progressPercent = Math.round((answeredCount / totalQuestions) * 100);
+    const isSubmitBusy = isCaptureBusy(session) || (session.source === "supabase" && appState.backend.aiDecisionLoading);
 
     return `
       <div class="expert-shell">
@@ -2884,13 +3022,18 @@
             }
             <p class="helper-note">${copy.submitHint}</p>
             ${
+              session.source === "supabase" && appState.backend.aiDecisionLoading
+                ? `<p class="transcript-review-note">${escapeHtml(copy.analyzingAnswer)}</p>`
+                : ""
+            }
+            ${
               backendAvailable() && session.source === "supabase" && appState.backend.managerError
                 ? `<p class="helper-note" style="margin-top:10px;">${escapeHtml(appState.backend.managerError)}</p>`
                 : ""
             }
           </div>
           <div class="expert-actions">
-            <button class="button expert-primary" data-action="submit-answer" ${isCaptureBusy(session) ? "disabled" : ""}>${copy.sendAnswer}</button>
+            <button class="button expert-primary" data-action="submit-answer" ${isSubmitBusy ? "disabled" : ""}>${copy.sendAnswer}</button>
             <button class="button-secondary expert-secondary" data-action="pause-interview">${copy.pauseInterview}</button>
           </div>
           <p class="footer-note" id="save-status">${copy.savedAt} ${escapeHtml(formatTime(session.draftUpdatedAt || session.updatedAt))} · ${copy.saveNotice}</p>
@@ -3655,8 +3798,58 @@
 
     stopSpeechIfNeeded();
     if (session.source === "supabase") {
+      const questionText = getCurrentQuestionText(session);
+      const fixedQuestionText = getSectionQuestion(session.currentSectionId);
+      const answeringFollowUp = isAnsweringAiFollowUp(session);
+      const existingThemeAnswer = answeringFollowUp ? getExistingRemoteThemeAnswer(session) : "";
+      const answerToSave =
+        answeringFollowUp && existingThemeAnswer
+          ? `${existingThemeAnswer}\n\nSuivi : ${value}`
+          : value;
+
       try {
-        const nextSession = await submitRemoteTextAnswer(session, value);
+        appState.backend.aiDecisionLoading = !answeringFollowUp;
+        appState.backend.managerError = "";
+        render();
+
+        let nextSession = null;
+        if (answeringFollowUp) {
+          nextSession = await submitRemoteTextAnswer(session, answerToSave, {
+            advance: true,
+            questionText: fixedQuestionText,
+          });
+        } else {
+          const savedSession = await submitRemoteTextAnswer(session, answerToSave, {
+            advance: false,
+            questionText,
+          });
+          let decision = null;
+          try {
+            decision = await decideRemoteNextQuestion(savedSession || session, answerToSave, questionText);
+          } catch (decisionError) {
+            await logRemoteAiFallback(
+              savedSession || session,
+              answerToSave,
+              questionText,
+              decisionError.message || "AI decision endpoint failed",
+            );
+          }
+
+          if (
+            decision?.action === "ask_followup" &&
+            decision.theme_id === session.currentSectionId &&
+            decision.followup_text &&
+            getAcceptedFollowUpCount(savedSession || session) < 1
+          ) {
+            nextSession = await loadRemoteInterviewByToken(session.token);
+          } else {
+            nextSession = await submitRemoteTextAnswer(savedSession || session, answerToSave, {
+              advance: true,
+              questionText: fixedQuestionText,
+            });
+          }
+        }
+
         appState.draftAnswer = "";
         if (nextSession) {
           nextSession.draftAnswer = "";
@@ -3664,8 +3857,10 @@
           upsertSessionInMemory(nextSession);
         }
         resetAudioRecordingState();
+        appState.backend.aiDecisionLoading = false;
         render();
       } catch (error) {
+        appState.backend.aiDecisionLoading = false;
         appState.backend.managerError = error.message || "La réponse n’a pas pu être sauvegardée.";
         render();
       }
