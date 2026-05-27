@@ -3452,13 +3452,13 @@
                   <p class="doc-key">Résumé</p>
                   <p class="doc-value">${escapeHtml(generated.summary || "À compléter.")}</p>
                 </div>
-                ${renderFicheSection("Points techniques clés", generated.key_technical_points, "Aucun point technique précis n’a été capturé.")}
+                ${renderFicheSection("Connaissances capturées", generated.key_technical_points, "Aucune connaissance technique exploitable n’a été clairement capturée sur ce point.")}
                 ${renderFicheSection("Raisonnement / heuristiques", generated.reasoning_heuristics, "À compléter à partir d’un raisonnement plus précis.")}
                 ${renderFicheSection("Exemples ou cas clients", generated.examples_customer_cases, "Aucun exemple ou cas client précis n’a été capturé.")}
                 ${renderFicheSection("Risques / erreurs à éviter", generated.risks_mistakes_to_avoid, "Aucun risque ou erreur précise n’a été capturé.")}
                 ${renderFicheSection("Questions ouvertes / points à compléter", generated.open_questions_missing_points, "Aucun point à compléter prioritaire.")}
                 <div class="document-field">
-                  <p class="doc-key">Réponses brutes conservées</p>
+                  <p class="doc-key">Réponse brute utilisée</p>
                   ${renderSimpleList(answers, "Aucune réponse brute disponible pour ce thème.")}
                 </div>
               `
