@@ -151,6 +151,10 @@
       questionAudioLoading: "Préparation de la voix…",
       questionAudioReady: "Lecture de la question disponible.",
       questionAudioFailed: "La lecture audio n’a pas pu démarrer. La question écrite reste disponible.",
+      generateFiches: "Générer les fiches",
+      regenerateFiches: "Regénérer les fiches",
+      generatingFiches: "Génération des fiches…",
+      ficheGenerationFailed: "La génération des fiches a échoué. Les réponses brutes restent disponibles.",
       sendAnswer: "Valider la réponse",
       submitHint: "Le texte reste éditable si la transcription est imparfaite.",
       hintsTitle: "Repères utiles",
@@ -302,6 +306,10 @@
       questionAudioLoading: "Preparing voice…",
       questionAudioReady: "Question audio ready.",
       questionAudioFailed: "Audio playback could not start. The written question remains available.",
+      generateFiches: "Generate sheets",
+      regenerateFiches: "Regenerate sheets",
+      generatingFiches: "Generating sheets…",
+      ficheGenerationFailed: "Sheet generation failed. Raw answers remain available.",
       sendAnswer: "Send",
       submitHint: "Enter to send. Shift + Enter for a new line.",
       hintsTitle: "Helpful cues",
@@ -435,6 +443,9 @@
       publicLoads: {},
       aiDecisionLoading: false,
       aiDecisionStatus: "idle",
+      ficheGenerationLoading: false,
+      ficheGenerationSessionId: "",
+      ficheGenerationError: "",
     },
     questionAudio: {
       status: "idle",
@@ -499,6 +510,14 @@
       return "";
     }
     return `${config.supabaseUrl.replace(/\/$/, "")}/functions/v1/speak-question`;
+  }
+
+  function getFicheGenerationEndpoint() {
+    const config = getBackendConfig();
+    if (!config.supabaseUrl) {
+      return "";
+    }
+    return `${config.supabaseUrl.replace(/\/$/, "")}/functions/v1/generate-fiches`;
   }
 
   function getStoredManagerTokens() {
@@ -1389,6 +1408,7 @@
     const plan = payload.plan || {};
     const answers = Array.isArray(payload.answers) ? payload.answers : [];
     const decisions = Array.isArray(payload.ai_decisions) ? payload.ai_decisions : [];
+    const fiches = Array.isArray(payload.fiches) ? payload.fiches : [];
     const themeIds = normalizeThemeIds(
       Array.isArray(interview.selected_theme_ids)
         ? interview.selected_theme_ids
@@ -1475,6 +1495,7 @@
       completedAt: interview.completed_at || (interview.status === "completed" ? interview.updated_at : null),
       contextNote: "Entretien sauvegardé dans Supabase.",
       aiDecisions: decisions,
+      technicalFiches: fiches,
       messages,
       sections: createSections(currentSectionId, themeIds).map((section) => ({
         ...section,
@@ -1676,6 +1697,43 @@
     }
 
     return payload;
+  }
+
+  async function generateRemoteFiches(session) {
+    const endpoint = getFicheGenerationEndpoint();
+    const config = getBackendConfig();
+    const managerTokens = getStoredManagerTokens();
+    if (!endpoint || !config.supabaseAnonKey || !session?.id || managerTokens.length === 0) {
+      throw new Error("La génération des fiches n’est pas configurée.");
+    }
+
+    let lastError = null;
+    for (const managerToken of managerTokens) {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          apikey: config.supabaseAnonKey,
+          Authorization: `Bearer ${config.supabaseAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          manager_token: managerToken,
+          interview_id: session.id,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok) {
+        appState.backend.ficheGenerationError = "";
+        return loadRemoteManagerDetail(managerToken, session.id);
+      }
+
+      lastError = new Error(payload?.error || `Fiche generation failed with status ${response.status}`);
+      if (response.status !== 404) {
+        break;
+      }
+    }
+
+    throw lastError || new Error(dictionary().ficheGenerationFailed);
   }
 
   async function loadRemoteManagerData() {
@@ -3229,7 +3287,18 @@
       .filter(Boolean);
   }
 
+  function getGeneratedFicheRow(session, themeId) {
+    return (session.technicalFiches || []).find((fiche) => fiche.theme_id === themeId) || null;
+  }
+
+  function getGeneratedFicheContent(session, themeId) {
+    const row = getGeneratedFicheRow(session, themeId);
+    return row?.fiche && typeof row.fiche === "object" ? row.fiche : null;
+  }
+
   function getThemeFicheStatus(session, themeId) {
+    const generated = getGeneratedFicheRow(session, themeId);
+    if (generated?.status) return generated.status;
     const answers = getThemeAnswersForSession(session, themeId);
     if (!answers.length) return "Non abordé";
     const totalLength = answers.join(" ").length;
@@ -3237,6 +3306,11 @@
   }
 
   function getThemePreview(session, themeId) {
+    const generated = getGeneratedFicheContent(session, themeId);
+    if (generated?.summary) {
+      const summary = compactSentence(generated.summary);
+      return summary.length > 132 ? `${summary.slice(0, 129)}...` : summary;
+    }
     const answer = getThemeAnswersForSession(session, themeId)[0];
     if (!answer) return "Cette fiche sera complétée avec les prochaines réponses.";
     return answer.length > 132 ? `${answer.slice(0, 129)}...` : answer;
@@ -3278,6 +3352,16 @@
     return document?.themeNotes?.[themeId] || "";
   }
 
+  function renderFicheSection(title, values, fallback) {
+    const items = Array.isArray(values) ? values.map(compactSentence).filter(Boolean) : [];
+    return `
+      <div class="document-field">
+        <p class="doc-key">${escapeHtml(title)}</p>
+        ${renderSimpleList(items, fallback)}
+      </div>
+    `;
+  }
+
   function renderThemeFicheCard(session, themeId) {
     const firstAnswer = getThemeAnswersForSession(session, themeId)[0] || "";
     return `
@@ -3300,6 +3384,7 @@
     const examples = getThemeExamples(answers);
     const openQuestions = getThemeOpenQuestions(answers);
     const notes = getThemeNotes(document, themeId);
+    const generated = getGeneratedFicheContent(session, themeId);
     const hasContent = answers.length > 0;
 
     return `
@@ -3320,26 +3405,42 @@
           <p class="eyebrow">${escapeHtml(status)}</p>
           <h2 class="section-title" style="margin-top:12px;">${escapeHtml(getSectionTitle(themeId))}</h2>
           ${
-            hasContent
+            generated
               ? `
                 <div class="document-field">
-                  <p class="doc-key">Connaissances capturées</p>
-                  ${renderSimpleList(answers, "Cette fiche sera complétée lorsque l’expert aura répondu à plus de questions sur ce thème.")}
+                  <p class="doc-key">Résumé</p>
+                  <p class="doc-value">${escapeHtml(generated.summary || "À compléter.")}</p>
                 </div>
+                ${renderFicheSection("Points techniques clés", generated.key_technical_points, "Aucun point technique précis n’a été capturé.")}
+                ${renderFicheSection("Raisonnement / heuristiques", generated.reasoning_heuristics, "À compléter à partir d’un raisonnement plus précis.")}
+                ${renderFicheSection("Exemples ou cas clients", generated.examples_customer_cases, "Aucun exemple ou cas client précis n’a été capturé.")}
+                ${renderFicheSection("Risques / erreurs à éviter", generated.risks_mistakes_to_avoid, "Aucun risque ou erreur précise n’a été capturé.")}
+                ${renderFicheSection("Questions ouvertes / points à compléter", generated.open_questions_missing_points, "Aucun point à compléter prioritaire.")}
                 <div class="document-field">
-                  <p class="doc-key">Raisonnement / heuristiques</p>
-                  ${renderSimpleList(answers, "À compléter.")}
-                </div>
-                <div class="document-field">
-                  <p class="doc-key">Exemples ou cas mentionnés</p>
-                  ${renderSimpleList(examples, "Aucun exemple précis n’a encore été repéré dans cette fiche.")}
-                </div>
-                <div class="document-field">
-                  <p class="doc-key">Questions ouvertes</p>
-                  ${renderSimpleList(openQuestions, "Aucune question ouverte prioritaire pour le moment.")}
+                  <p class="doc-key">Réponses brutes conservées</p>
+                  ${renderSimpleList(answers, "Aucune réponse brute disponible pour ce thème.")}
                 </div>
               `
-              : `<div class="empty-inline">Cette fiche sera complétée lorsque l’expert aura répondu à plus de questions sur ce thème.</div>`
+              : hasContent
+                ? `
+                  <div class="document-field">
+                    <p class="doc-key">Connaissances capturées</p>
+                    ${renderSimpleList(answers, "Cette fiche sera complétée lorsque l’expert aura répondu à plus de questions sur ce thème.")}
+                  </div>
+                  <div class="document-field">
+                    <p class="doc-key">Raisonnement / heuristiques</p>
+                    ${renderSimpleList(answers, "À compléter.")}
+                  </div>
+                  <div class="document-field">
+                    <p class="doc-key">Exemples ou cas mentionnés</p>
+                    ${renderSimpleList(examples, "Aucun exemple précis n’a encore été repéré dans cette fiche.")}
+                  </div>
+                  <div class="document-field">
+                    <p class="doc-key">Questions ouvertes</p>
+                    ${renderSimpleList(openQuestions, "Aucune question ouverte prioritaire pour le moment.")}
+                  </div>
+                `
+                : `<div class="empty-inline">Cette fiche sera complétée lorsque l’expert aura répondu à plus de questions sur ce thème.</div>`
           }
           <div class="document-field">
             <p class="doc-key">Notes éditables</p>
@@ -3583,6 +3684,9 @@
     const activeThemeId = appState.currentDocId && selectedThemeIds.includes(appState.currentDocId)
       ? appState.currentDocId
       : null;
+    const generatedFicheCount = (session.technicalFiches || []).length;
+    const isGeneratingFiches =
+      appState.backend.ficheGenerationLoading && appState.backend.ficheGenerationSessionId === session.id;
 
     if (activeThemeId) {
       return renderThemeFicheDetail(session, expertiseDoc, activeThemeId);
@@ -3617,6 +3721,17 @@
           <p class="eyebrow">${copy.docTitle}</p>
           <h2 class="section-title" style="margin-top:12px;">Fiches techniques</h2>
           <p class="helper-note" style="margin-top:8px;">Chaque fiche correspond à un thème abordé pendant l’entretien.</p>
+          ${
+            session.source === "supabase" && backendAvailable()
+              ? `<div class="synthesis-action-row">
+                  <button class="button" data-action="generate-fiches" ${isGeneratingFiches ? "disabled" : ""}>
+                    ${escapeHtml(isGeneratingFiches ? copy.generatingFiches : generatedFicheCount ? copy.regenerateFiches : copy.generateFiches)}
+                  </button>
+                  <span class="helper-note">${generatedFicheCount}/${selectedThemeIds.length} fiches générées</span>
+                </div>`
+              : ""
+          }
+          ${appState.backend.ficheGenerationError ? `<p class="helper-note error-note">${escapeHtml(appState.backend.ficheGenerationError)}</p>` : ""}
           ${renderThemeFicheCards(session)}
         </section>
       </div>
@@ -4187,6 +4302,29 @@
         if (sessionId) {
           appState.currentDocId = null;
           setHash(`#/manager/${sessionId}`);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-action='generate-fiches']").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const session = route.sessionId ? getSessionById(route.sessionId) : null;
+        if (!session || session.source !== "supabase") {
+          return;
+        }
+
+        appState.backend.ficheGenerationLoading = true;
+        appState.backend.ficheGenerationSessionId = session.id;
+        appState.backend.ficheGenerationError = "";
+        render();
+        try {
+          await generateRemoteFiches(session);
+        } catch (error) {
+          appState.backend.ficheGenerationError = error.message || dictionary().ficheGenerationFailed;
+        } finally {
+          appState.backend.ficheGenerationLoading = false;
+          appState.backend.ficheGenerationSessionId = "";
+          render();
         }
       });
     });

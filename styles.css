@@ -217,6 +217,19 @@ button {
   justify-content: flex-end;
 }
 
+.synthesis-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.error-note {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 .button,
 .button-secondary,
 .button-subtle,
