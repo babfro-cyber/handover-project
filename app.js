@@ -155,6 +155,10 @@
       regenerateFiches: "Regénérer les fiches",
       generatingFiches: "Génération des fiches…",
       ficheGenerationFailed: "La génération des fiches a échoué. Les réponses brutes restent disponibles.",
+      deleteInterview: "Supprimer",
+      deleteInterviewConfirm: "Supprimer cet entretien ? Cette action supprimera les réponses associées.",
+      deleteInterviewSuccess: "Entretien supprimé.",
+      deleteInterviewFailed: "La suppression de l’entretien a échoué.",
       sendAnswer: "Valider la réponse",
       submitHint: "Le texte reste éditable si la transcription est imparfaite.",
       hintsTitle: "Repères utiles",
@@ -310,6 +314,10 @@
       regenerateFiches: "Regenerate sheets",
       generatingFiches: "Generating sheets…",
       ficheGenerationFailed: "Sheet generation failed. Raw answers remain available.",
+      deleteInterview: "Delete",
+      deleteInterviewConfirm: "Delete this interview? This will delete the associated answers.",
+      deleteInterviewSuccess: "Interview deleted.",
+      deleteInterviewFailed: "Interview deletion failed.",
       sendAnswer: "Send",
       submitHint: "Enter to send. Shift + Enter for a new line.",
       hintsTitle: "Helpful cues",
@@ -446,6 +454,7 @@
       ficheGenerationLoading: false,
       ficheGenerationSessionId: "",
       ficheGenerationError: "",
+      dashboardMessage: "",
     },
     questionAudio: {
       status: "idle",
@@ -1736,6 +1745,29 @@
     throw lastError || new Error(dictionary().ficheGenerationFailed);
   }
 
+  async function deleteRemoteInterview(session) {
+    const managerTokens = getStoredManagerTokens();
+    if (!backendAvailable() || !session?.id || managerTokens.length === 0) {
+      throw new Error(dictionary().deleteInterviewFailed);
+    }
+
+    let lastError = null;
+    for (const managerToken of managerTokens) {
+      const payload = await callSupabaseRpc("delete_manager_interview", {
+        p_manager_token: managerToken,
+        p_interview_id: session.id,
+      });
+
+      if (payload?.deleted) {
+        return payload;
+      }
+
+      lastError = new Error(payload?.reason || dictionary().deleteInterviewFailed);
+    }
+
+    throw lastError || new Error(dictionary().deleteInterviewFailed);
+  }
+
   async function loadRemoteManagerData() {
     const managerTokens = getStoredManagerTokens();
     if (!backendAvailable() || managerTokens.length === 0) {
@@ -2994,19 +3026,27 @@
                 ? `<p class="helper-note" style="margin-top:10px;">${escapeHtml(appState.backend.managerError)}</p>`
                 : ""
             }
+            ${
+              appState.backend.dashboardMessage
+                ? `<p class="helper-note" style="margin-top:10px;">${escapeHtml(appState.backend.dashboardMessage)}</p>`
+                : ""
+            }
             <div class="interview-row-list">
               ${items.map((item) => {
                 const expertName = `${item.firstName} ${item.lastName}`.trim() || "Expert";
                 const isSelected = selectedSession && selectedSession.id === item.id;
                 return `
-                  <button class="interview-row ${isSelected ? "active" : ""}" data-action="select-dashboard-interview" data-session-id="${escapeHtml(item.id)}">
-                    <span>
-                      <strong>${escapeHtml(expertName)}</strong>
-                      <small>${escapeHtml(item.profile || item.roleTitle)}</small>
-                    </span>
-                    <span class="status-pill">${escapeHtml(getDashboardStatus(item))}</span>
-                    <span class="row-progress">${escapeHtml(formatDuration(item.durationMinutes))} · ${escapeHtml(formatSessionCount(item.sessionCount))}</span>
-                  </button>
+                  <div class="interview-row ${isSelected ? "active" : ""}">
+                    <button class="interview-row-main" data-action="select-dashboard-interview" data-session-id="${escapeHtml(item.id)}">
+                      <span>
+                        <strong>${escapeHtml(expertName)}</strong>
+                        <small>${escapeHtml(item.profile || item.roleTitle)}</small>
+                      </span>
+                      <span class="status-pill">${escapeHtml(getDashboardStatus(item))}</span>
+                      <span class="row-progress">${escapeHtml(formatDuration(item.durationMinutes))} · ${escapeHtml(formatSessionCount(item.sessionCount))}</span>
+                    </button>
+                    <button class="button-subtle delete-interview-button" data-action="delete-interview" data-session-id="${escapeHtml(item.id)}">${escapeHtml(copy.deleteInterview)}</button>
+                  </div>
                 `;
               }).join("")}
             </div>
@@ -3031,6 +3071,7 @@
                     <div class="button-row manager-card-actions">
                       <button class="button-secondary" data-action="copy-link" data-link="${escapeHtml(buildLocalExpertLink(selectedSession))}">${copy.copyLink}</button>
                       <button class="button-secondary" data-action="test-expert" data-session-id="${escapeHtml(selectedSession.id)}">${copy.testExpertPath}</button>
+                      <button class="button-subtle" data-action="delete-interview" data-session-id="${escapeHtml(selectedSession.id)}">${escapeHtml(copy.deleteInterview)}</button>
                       <button class="button" data-action="open-document" data-session-id="${escapeHtml(selectedSession.id)}">${copy.viewExpertiseSheets}</button>
                     </div>
                   </div>`
@@ -4245,7 +4286,38 @@
         appState.selectedDashboardSessionId = appState.selectedDashboardSessionId === sessionId ? null : sessionId;
         appState.createdSessionId = null;
         appState.showCreateInterview = false;
+        appState.backend.dashboardMessage = "";
         render();
+      });
+    });
+
+    document.querySelectorAll("[data-action='delete-interview']").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const sessionId = button.getAttribute("data-session-id");
+        const session = sessionId ? getSessionById(sessionId) : null;
+        if (!session || !window.confirm(dictionary().deleteInterviewConfirm)) {
+          return;
+        }
+
+        try {
+          if (session.source === "supabase") {
+            await deleteRemoteInterview(session);
+          } else {
+            appState.sessions = appState.sessions.filter((item) => item.id !== session.id);
+            removeDocument(session.id);
+            persist();
+          }
+
+          appState.selectedDashboardSessionId = null;
+          appState.createdSessionId = appState.createdSessionId === session.id ? null : appState.createdSessionId;
+          appState.backend.managerLoaded = false;
+          appState.backend.dashboardMessage = dictionary().deleteInterviewSuccess;
+          await loadRemoteManagerData().catch(() => {});
+          render();
+        } catch (error) {
+          appState.backend.dashboardMessage = error.message || dictionary().deleteInterviewFailed;
+          render();
+        }
       });
     });
 

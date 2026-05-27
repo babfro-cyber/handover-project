@@ -947,7 +947,7 @@ button {
 
 .interview-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   width: 100%;
@@ -959,10 +959,28 @@ button {
   text-align: left;
 }
 
+.interview-row-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
 .interview-row:hover,
 .interview-row.active {
   border-color: var(--accent);
   background: var(--surface-strong);
+}
+
+.delete-interview-button {
+  min-height: 36px;
+  padding: 0 12px;
 }
 
 .interview-row strong,
