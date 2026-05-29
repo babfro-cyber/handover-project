@@ -187,7 +187,49 @@ function isNearDuplicate(a: string, b: string) {
   const cleanA = normalizeForComparison(a);
   const cleanB = normalizeForComparison(b);
   if (!cleanA || !cleanB) return false;
-  return cleanA === cleanB || cleanA.includes(cleanB) || cleanB.includes(cleanA) || jaccardSimilarity(cleanA, cleanB) >= 0.82;
+  return cleanA === cleanB || cleanA.includes(cleanB) || cleanB.includes(cleanA) || jaccardSimilarity(cleanA, cleanB) >= 0.62;
+}
+
+function wordTokens(value: string) {
+  return normalizeForComparison(value).split(" ").filter(Boolean);
+}
+
+function hasConsecutiveRawWords(value: string, answerText: string, threshold = 40) {
+  const itemWords = wordTokens(value);
+  const answerWords = wordTokens(answerText);
+  if (itemWords.length < threshold || answerWords.length < threshold) return false;
+
+  for (let itemIndex = 0; itemIndex <= itemWords.length - threshold; itemIndex += 1) {
+    const needle = itemWords.slice(itemIndex, itemIndex + threshold).join(" ");
+    for (let answerIndex = 0; answerIndex <= answerWords.length - threshold; answerIndex += 1) {
+      if (answerWords.slice(answerIndex, answerIndex + threshold).join(" ") === needle) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function wordCount(value: string) {
+  return wordTokens(value).length;
+}
+
+function splitLongBullet(value: string) {
+  const text = cleanText(value, 1200);
+  if (!text) return [];
+  const sentenceParts = text
+    .split(/(?<=[.!?])\s+|;\s+|\s+-\s+/)
+    .map((part) => cleanText(part, 220))
+    .filter(Boolean);
+  const parts = sentenceParts.length > 1 ? sentenceParts : [text];
+  return parts
+    .flatMap((part) => {
+      if (wordCount(part) <= 35) return [part];
+      const words = part.split(/\s+/).filter(Boolean);
+      return [words.slice(0, 30).join(" ") + "…"];
+    })
+    .filter(Boolean)
+    .slice(0, 4);
 }
 
 function compactSummaryFromAnswer(answerText: string) {
@@ -201,7 +243,10 @@ function compactSummaryFromAnswer(answerText: string) {
 
 function stringList(value: unknown, maxItems = 8, maxLength = 360) {
   if (!Array.isArray(value)) return [];
-  return value.map((item) => cleanText(item, maxLength)).filter(Boolean).slice(0, maxItems);
+  return value
+    .flatMap((item) => splitLongBullet(cleanText(item, maxLength)))
+    .filter(Boolean)
+    .slice(0, maxItems);
 }
 
 function getThemeTitle(theme: PlanTheme | undefined, themeId: string) {
@@ -289,8 +334,32 @@ function hasRawTranscriptLeak(sectionItems: string[], answerText: string) {
   if (!answer) return false;
   return sectionItems.some((item) => {
     const cleanItem = normalizeForComparison(item);
-    return cleanItem.length > 100 && (answer.includes(cleanItem) || jaccardSimilarity(cleanItem, answer) >= 0.9);
+    return (
+      hasConsecutiveRawWords(item, answerText, 40) ||
+      wordCount(item) > 55 ||
+      (cleanItem.length > 100 && (answer.includes(cleanItem) || jaccardSimilarity(cleanItem, answer) >= 0.78))
+    );
   });
+}
+
+function sectionsLookMostlySimilar(sections: Record<string, string[]>) {
+  const sectionTexts = Object.entries(sections)
+    .filter(([sectionName]) => sectionName !== "open_questions_missing_points")
+    .map(([, items]) => items.join(" "))
+    .filter((text) => wordCount(text) >= 8);
+  if (sectionTexts.length < 3) return false;
+
+  let similarPairs = 0;
+  let totalPairs = 0;
+  for (let index = 0; index < sectionTexts.length; index += 1) {
+    for (let other = index + 1; other < sectionTexts.length; other += 1) {
+      totalPairs += 1;
+      if (jaccardSimilarity(sectionTexts[index], sectionTexts[other]) >= 0.48) {
+        similarPairs += 1;
+      }
+    }
+  }
+  return totalPairs > 0 && similarPairs / totalPairs >= 0.5;
 }
 
 function applySectionFallbacks(fiche: GeneratedFiche): GeneratedFiche {
@@ -349,11 +418,12 @@ function improveFicheQuality(fiche: GeneratedFiche, answerText: string): Generat
   );
   const severeDuplicationAfter = hasSevereDuplication(deduped.sections);
 
-  if (severeDuplicationBefore || severeDuplicationAfter || hasRawLeak) {
+  if (severeDuplicationBefore || severeDuplicationAfter || hasRawLeak || sectionsLookMostlySimilar(deduped.sections)) {
     const qualityFallback: GeneratedFiche = {
       ...fiche,
       status: fiche.status === "Non abordé" ? "Non abordé" : ("À compléter" as FicheStatus),
-      summary: fiche.summary || compactSummaryFromAnswer(answerText),
+      summary:
+        "La réponse contient des éléments utiles, mais la synthèse automatique n’a pas réussi à les structurer correctement. Veuillez consulter la réponse brute.",
       key_technical_points: [],
       reasoning_heuristics: [],
       examples_customer_cases: [],
@@ -517,7 +587,7 @@ async function askOpenAi(
         {
           role: "system",
           content:
-            "Tu génères des fiches techniques NumerHyd à partir d'un entretien. Tu synthétises et classes le contenu capturé, sans recopier le verbatim dans plusieurs sections. Tu n'utilises que le contenu capturé fourni. Tu n'ajoutes aucune connaissance hydraulique générale, aucun fait inventé, aucune hypothèse non dite. Si une information manque, tu écris explicitement qu'elle n'est pas précisée dans l'entretien. Tu écris en français simple, pratique, précis et nuancé.",
+            "Tu génères des fiches techniques NumerHyd à partir d'un entretien. Tu extrais des idées, tu synthétises et tu classes le contenu capturé en bullets courts. Tu ne dois jamais citer, coller ou recopier un paragraphe du transcript brut dans les sections de synthèse. Le texte brut appartient uniquement à la section de vérification côté manager, pas à la fiche générée. Tu n'utilises que le contenu capturé fourni. Tu n'ajoutes aucune connaissance hydraulique générale, aucun fait inventé, aucune hypothèse non dite. Si une information manque, tu écris explicitement: Non précisé dans l’entretien. Tu écris en français simple, pratique, précis et nuancé.",
         },
         {
           role: "user",
@@ -535,12 +605,19 @@ async function askOpenAi(
               "Inclure le answer_id fourni dans source_references quand il existe.",
               "Ne copie pas une même phrase dans plusieurs sections.",
               "Ne colle pas le transcript brut comme item de liste; le transcript reste visible séparément côté manager.",
+              "Ne cite pas le raw transcript sauf dans source_references.",
+              "Reformule en bullets concis, idéalement moins de 25 mots par bullet.",
+              "Chaque bullet doit exprimer une seule idée extraite.",
+              "Chaque section doit contenir une information différente.",
+              "N’utilise jamais le même bullet, la même phrase ou le même paragraphe dans deux sections.",
+              "Si un contenu ne peut pas être classé dans une section, écris: Non précisé dans l’entretien.",
               "Chaque section a un rôle distinct.",
               "key_technical_points contient uniquement des faits techniques explicitement dits: choix matière, procédé, contrôle, contrainte, préférence technique. Si rien n'est clair, utiliser exactement: Aucune connaissance technique exploitable n’a été clairement capturée sur ce point.",
               "reasoning_heuristics contient uniquement logique de décision, règle pratique, arbitrage ou raisonnement diagnostic. Si absent, utiliser exactement: Le raisonnement derrière la décision n’a pas encore été explicité.",
               "examples_customer_cases contient uniquement exemples réels, cas client, incident ou situation terrain. Si l'exemple est vague, dire qu'il est incomplet. Si absent, utiliser exactement: Aucun exemple concret suffisamment détaillé n’a été mentionné.",
               "risks_mistakes_to_avoid contient uniquement risques ou erreurs explicitement mentionnés ou clairement impliqués. Si absent, utiliser exactement: Les risques ou erreurs à éviter n’ont pas été précisés.",
               "open_questions_missing_points doit activement lister ce qu'il faut clarifier quand la réponse est vague.",
+              "Pour Blocs forés, classifier ainsi quand ces idées sont présentes: connaissances = fonction du bloc, schéma, débits, pressions, sécurité, contraintes de montage, usinabilité, montage, contrôle, dépannage; raisonnement = penser au contrôle final, éviter la compacité risquée, accepter d’agrandir pour fiabilité/contrôle; exemples = cas client ou machine mobile; risques = perçages proches, croisements dangereux, bouchons difficiles, zone faible, contrôle difficile.",
             ],
           }),
         },

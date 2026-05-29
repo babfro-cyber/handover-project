@@ -3343,7 +3343,7 @@
     const answers = getThemeAnswersForSession(session, themeId);
     if (!answers.length) return "Non abordé";
     const totalLength = answers.join(" ").length;
-    return answers.length > 1 || totalLength > 260 ? "Enrichi" : "Réponse partielle";
+    return answers.length > 1 || totalLength > 260 ? "Exploitable" : "Réponse partielle";
   }
 
   function getThemePreview(session, themeId) {
