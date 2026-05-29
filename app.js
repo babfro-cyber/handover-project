@@ -73,6 +73,9 @@
       resumeNow: "Reprendre maintenant",
       questionCount: "Question",
       themeLabel: "Thème",
+      mainQuestionLabel: "Question principale",
+      aiFollowUpLabel: "Relance IA",
+      progressThemesCompleted: "Progression : {done} / {total} thèmes complétés",
       micRecording: "Enregistrement en cours…",
       micStopped: "Arrêté",
       managerLinkHelp: "Envoyez ce lien au cédant. Il arrivera directement dans son entretien, sans passer par l’espace NumerHyd.",
@@ -282,6 +285,11 @@
       lastName: "Last name",
       begin: "Start",
       currentQuestion: "Current question",
+      questionCount: "Question",
+      themeLabel: "Theme",
+      mainQuestionLabel: "Main question",
+      aiFollowUpLabel: "AI follow-up",
+      progressThemesCompleted: "Progress: {done} / {total} completed themes",
       yourAnswer: "Your answer",
       answerPlaceholder: "Explain it as if you were training the person taking over.",
       answerMode: "Answer mode",
@@ -1580,6 +1588,18 @@
     return (session?.aiDecisions || []).filter(
       (decision) => decision.theme_id === themeId && decision.action === "ask_followup" && decision.status === "accepted",
     ).length;
+  }
+
+  function getQuestionProgressLabel(session, activeQuestion) {
+    const copy = dictionary();
+    if (activeQuestion?.questionKind !== "ai_followup") {
+      return copy.mainQuestionLabel;
+    }
+
+    const followUpCount = getAcceptedFollowUpCount(session);
+    return followUpCount > 0
+      ? `Relance ${Math.min(followUpCount, MAX_REMOTE_FOLLOWUPS)} / ${MAX_REMOTE_FOLLOWUPS}`
+      : copy.aiFollowUpLabel;
   }
 
   function isValidRemoteFollowUpDecision(decision, session) {
@@ -3231,11 +3251,16 @@
     const activeQuestion = getActiveQuestion(session);
     const currentIndex = Math.max(0, themeIds.indexOf(session.currentSectionId));
     const totalQuestions = themeIds.length;
-    const questionNumber = Math.min(totalQuestions, currentIndex + 1);
-    const answeredCount = getAnsweredThemeCount(session);
-    const progressPercent = Math.round((answeredCount / totalQuestions) * 100);
+    const themeNumber = Math.min(totalQuestions, currentIndex + 1);
+    const completedThemeCount = session.completedAt ? totalQuestions : Math.max(0, currentIndex);
+    const progressPercent = Math.round((completedThemeCount / totalQuestions) * 100);
     const isSubmitBusy = isCaptureBusy(session) || (session.source === "supabase" && appState.backend.aiDecisionLoading);
     const activeQuestionText = activeQuestion ? activeQuestion.content : getSectionQuestion(session.currentSectionId);
+    const questionProgressLabel = getQuestionProgressLabel(session, activeQuestion);
+    const themeTitle = getSectionTitle(session.currentSectionId);
+    const completedProgressLabel = copy.progressThemesCompleted
+      .replace("{done}", String(completedThemeCount))
+      .replace("{total}", String(totalQuestions));
     const questionAudioKey = getQuestionAudioKey(session, activeQuestionText);
     const hasCurrentQuestionAudio = appState.questionAudio.questionKey === questionAudioKey;
     const questionAudioStatus = hasCurrentQuestionAudio ? getQuestionAudioStatusLabel() : "";
@@ -3245,11 +3270,11 @@
         ${previewBanner}
         <section class="expert-card question-focus">
           <div class="expert-progress-line">
-            <span>${copy.questionCount} ${questionNumber} sur ${totalQuestions}</span>
-            <span>${answeredCount}/${totalQuestions} ${copy.answeredQuestions}</span>
+            <span>${escapeHtml(`${copy.themeLabel} ${themeNumber} / ${totalQuestions} — ${themeTitle}`)}</span>
+            <span>${escapeHtml(questionProgressLabel)}</span>
           </div>
           <div class="progress-meter expert-meter"><span style="width:${Math.max(6, progressPercent)}%;"></span></div>
-          <p class="question-meta">${copy.themeLabel} : ${escapeHtml(getSectionTitle(session.currentSectionId))}</p>
+          <p class="question-meta">${escapeHtml(completedProgressLabel)}</p>
           <h1 class="expert-question">${escapeHtml(activeQuestionText)}</h1>
           ${
             session.source === "supabase" && backendAvailable()
