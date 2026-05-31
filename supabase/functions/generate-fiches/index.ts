@@ -8,11 +8,15 @@ const DEFAULT_FICHE_MODEL = "gpt-4o-mini";
 const ALLOWED_STATUSES = ["Non abordé", "Réponse partielle", "Exploitable", "À compléter"] as const;
 const SECTION_FALLBACKS = {
   key_technical_points: "Aucune connaissance technique exploitable n’a été clairement capturée sur ce point.",
-  reasoning_heuristics: "Le raisonnement derrière la décision n’a pas encore été explicité.",
+  reasoning_heuristics: "Le raisonnement n’a pas été clairement explicité dans l’entretien.",
   examples_customer_cases: "Aucun exemple concret suffisamment détaillé n’a été mentionné.",
   risks_mistakes_to_avoid: "Les risques ou erreurs à éviter n’ont pas été précisés.",
   open_questions_missing_points: "Clarifier les connaissances techniques, le raisonnement, les exemples et les risques associés à ce thème.",
 };
+const NON_ABORDE_STATUS = "Non abordé";
+const PARTIAL_STATUS = "Réponse partielle";
+const USABLE_STATUS = "Exploitable";
+const COMPLETE_LATER_STATUS = "À compléter";
 
 type FicheStatus = (typeof ALLOWED_STATUSES)[number];
 
@@ -187,7 +191,7 @@ function isNearDuplicate(a: string, b: string) {
   const cleanA = normalizeForComparison(a);
   const cleanB = normalizeForComparison(b);
   if (!cleanA || !cleanB) return false;
-  return cleanA === cleanB || cleanA.includes(cleanB) || cleanB.includes(cleanA) || jaccardSimilarity(cleanA, cleanB) >= 0.62;
+  return cleanA === cleanB || cleanA.includes(cleanB) || cleanB.includes(cleanA) || jaccardSimilarity(cleanA, cleanB) >= 0.5;
 }
 
 function wordTokens(value: string) {
@@ -210,8 +214,52 @@ function hasConsecutiveRawWords(value: string, answerText: string, threshold = 4
   return false;
 }
 
+function hasRawSentenceLeak(value: string, answerText: string) {
+  const item = normalizeForComparison(value);
+  if (!item) return false;
+  return cleanText(answerText, 6000)
+    .split(/(?<=[.!?])\s+|(?:\s+Suivi\s*:\s*)/i)
+    .map((sentence) => normalizeForComparison(sentence))
+    .filter((sentence) => wordTokens(sentence).length >= 10)
+    .some((sentence) => item.includes(sentence) || sentence.includes(item));
+}
+
+function hasRawNgramLeak(value: string, answerText: string, threshold = 12) {
+  const itemWords = wordTokens(value);
+  const answerWords = wordTokens(answerText);
+  if (itemWords.length < threshold || answerWords.length < threshold) return false;
+
+  const rawNgrams = new Set<string>();
+  for (let index = 0; index <= answerWords.length - threshold; index += 1) {
+    rawNgrams.add(answerWords.slice(index, index + threshold).join(" "));
+  }
+
+  for (let index = 0; index <= itemWords.length - threshold; index += 1) {
+    if (rawNgrams.has(itemWords.slice(index, index + threshold).join(" "))) return true;
+  }
+  return false;
+}
+
 function wordCount(value: string) {
   return wordTokens(value).length;
+}
+
+function isFallbackItem(value: string) {
+  return Object.values(SECTION_FALLBACKS).some((fallback) => normalizeForComparison(fallback) === normalizeForComparison(value));
+}
+
+function isTranscriptLeakItem(value: string, answerText: string) {
+  const item = cleanText(value, 1400);
+  const normalizedItem = normalizeForComparison(item);
+  const normalizedAnswer = normalizeForComparison(answerText);
+  if (!normalizedItem || !normalizedAnswer) return false;
+  return (
+    wordCount(item) > 38 ||
+    hasConsecutiveRawWords(item, answerText, 18) ||
+    hasRawNgramLeak(item, answerText, 12) ||
+    hasRawSentenceLeak(item, answerText) ||
+    (normalizedItem.length > 90 && (normalizedAnswer.includes(normalizedItem) || jaccardSimilarity(normalizedItem, normalizedAnswer) >= 0.68))
+  );
 }
 
 function splitLongBullet(value: string) {
@@ -253,14 +301,53 @@ function getThemeTitle(theme: PlanTheme | undefined, themeId: string) {
   return cleanText(theme?.title, 160) || themeId;
 }
 
+function getUncertaintyScore(answerText: string) {
+  const normalized = normalizeForComparison(answerText);
+  const patterns = [
+    /\bje ne suis pas le plus precis\b/,
+    /\bpas le plus precis\b/,
+    /\bje ne connais pas\b/,
+    /\bje ne sais pas\b/,
+    /\bje sais pas\b/,
+    /\bje ne peux pas donner\b/,
+    /\bpas donner une regle\b/,
+    /\bpas toujours la regle exacte\b/,
+    /\bpas d exemple tres detaille\b/,
+    /\bil faudrait demander\b/,
+    /\bquelqu un de plus expert\b/,
+    /\bpas la bonne personne\b/,
+    /\bje ne suis pas expert\b/,
+    /\bje ne me souviens pas\b/,
+  ];
+  return patterns.reduce((score, pattern) => score + (pattern.test(normalized) ? 1 : 0), 0);
+}
+
+function hasConcreteTechnicalContent(items: string[]) {
+  return items.some((item) => !isFallbackItem(item) && wordCount(item) >= 4);
+}
+
+function hasReasoningContent(items: string[]) {
+  return items.some((item) => {
+    if (isFallbackItem(item) || wordCount(item) < 4) return false;
+    const normalized = normalizeForComparison(item);
+    return (
+      /\b(parce que|car|si|quand|lorsque|plutot|arbitr|choisir|eviter|prefer|regle|raison|risque|fiabil|controle|decision)\b/.test(
+        normalized,
+      ) || wordCount(item) >= 7
+    );
+  });
+}
+
 function inferStatus(answerText: string): FicheStatus {
   const clean = cleanText(answerText, 5000);
-  if (!clean) return "Non abordé";
+  if (!clean) return NON_ABORDE_STATUS;
+  const uncertaintyScore = getUncertaintyScore(clean);
+  if (uncertaintyScore >= 2) return COMPLETE_LATER_STATUS;
   if (clean.length < 80 || /^(je ne sais pas|je sais pas|ca depend|ça dépend)\b/i.test(clean)) {
-    return "Réponse partielle";
+    return PARTIAL_STATUS;
   }
-  if (clean.length < 220) return "À compléter";
-  return "Exploitable";
+  if (uncertaintyScore >= 1 || clean.length < 220) return PARTIAL_STATUS;
+  return USABLE_STATUS;
 }
 
 function emptyFiche(theme: PlanTheme | undefined, themeId: string): GeneratedFiche {
@@ -317,6 +404,24 @@ function dedupeSectionItems(sections: Record<string, string[]>) {
   return { sections: result, removed };
 }
 
+function removeTranscriptLeaks(sections: Record<string, string[]>, answerText: string) {
+  const result: Record<string, string[]> = {};
+  let removed = 0;
+
+  for (const [sectionName, items] of Object.entries(sections)) {
+    result[sectionName] = [];
+    for (const item of items) {
+      if (isTranscriptLeakItem(item, answerText)) {
+        removed += 1;
+        continue;
+      }
+      result[sectionName].push(item);
+    }
+  }
+
+  return { sections: result, removed };
+}
+
 function hasSevereDuplication(sections: Record<string, string[]>) {
   const sectionTexts = Object.values(sections)
     .map((items) => items.join(" "))
@@ -335,9 +440,8 @@ function hasRawTranscriptLeak(sectionItems: string[], answerText: string) {
   return sectionItems.some((item) => {
     const cleanItem = normalizeForComparison(item);
     return (
-      hasConsecutiveRawWords(item, answerText, 40) ||
-      wordCount(item) > 55 ||
-      (cleanItem.length > 100 && (answer.includes(cleanItem) || jaccardSimilarity(cleanItem, answer) >= 0.78))
+      isTranscriptLeakItem(item, answerText) ||
+      (cleanItem.length > 100 && (answer.includes(cleanItem) || jaccardSimilarity(cleanItem, answer) >= 0.68))
     );
   });
 }
@@ -364,7 +468,7 @@ function sectionsLookMostlySimilar(sections: Record<string, string[]>) {
 
 function applySectionFallbacks(fiche: GeneratedFiche): GeneratedFiche {
   const openQuestionFallback =
-    fiche.status === "Exploitable"
+    fiche.status === USABLE_STATUS
       ? "Aucun point à compléter prioritaire n’a été identifié dans le contenu capturé."
       : SECTION_FALLBACKS.open_questions_missing_points;
   const next: GeneratedFiche = {
@@ -387,14 +491,27 @@ function applySectionFallbacks(fiche: GeneratedFiche): GeneratedFiche {
   };
 
   if (
-    next.status === "Exploitable" &&
+    next.status === USABLE_STATUS &&
     (next.key_technical_points.includes(SECTION_FALLBACKS.key_technical_points) ||
       next.reasoning_heuristics.includes(SECTION_FALLBACKS.reasoning_heuristics))
   ) {
-    return { ...next, status: "Réponse partielle" as FicheStatus };
+    return { ...next, status: PARTIAL_STATUS as FicheStatus };
   }
 
   return next;
+}
+
+function enforceStatus(answerText: string, fiche: GeneratedFiche): FicheStatus {
+  if (!cleanText(answerText)) return NON_ABORDE_STATUS;
+  const uncertaintyScore = getUncertaintyScore(answerText);
+  const hasTechnical = hasConcreteTechnicalContent(fiche.key_technical_points);
+  const hasReasoning = hasReasoningContent(fiche.reasoning_heuristics);
+
+  if (uncertaintyScore >= 2) return COMPLETE_LATER_STATUS;
+  if (uncertaintyScore >= 1) return PARTIAL_STATUS;
+  if (!hasTechnical && !hasReasoning) return COMPLETE_LATER_STATUS;
+  if (!hasTechnical || !hasReasoning) return PARTIAL_STATUS;
+  return fiche.status === USABLE_STATUS ? USABLE_STATUS : fiche.status;
 }
 
 function improveFicheQuality(fiche: GeneratedFiche, answerText: string): GeneratedFiche {
@@ -405,8 +522,9 @@ function improveFicheQuality(fiche: GeneratedFiche, answerText: string): Generat
     risks_mistakes_to_avoid: fiche.risks_mistakes_to_avoid,
     open_questions_missing_points: fiche.open_questions_missing_points,
   };
-  const severeDuplicationBefore = hasSevereDuplication(sections);
-  const deduped = dedupeSectionItems(sections);
+  const withoutRawLeaks = removeTranscriptLeaks(sections, answerText);
+  const severeDuplicationBefore = hasSevereDuplication(withoutRawLeaks.sections);
+  const deduped = dedupeSectionItems(withoutRawLeaks.sections);
   const hasRawLeak = hasRawTranscriptLeak(
     [
       ...deduped.sections.key_technical_points,
@@ -417,11 +535,23 @@ function improveFicheQuality(fiche: GeneratedFiche, answerText: string): Generat
     answerText,
   );
   const severeDuplicationAfter = hasSevereDuplication(deduped.sections);
+  const remainingSynthesisItems = [
+    ...deduped.sections.key_technical_points,
+    ...deduped.sections.reasoning_heuristics,
+    ...deduped.sections.examples_customer_cases,
+    ...deduped.sections.risks_mistakes_to_avoid,
+  ].filter((item) => !isFallbackItem(item));
 
-  if (severeDuplicationBefore || severeDuplicationAfter || hasRawLeak || sectionsLookMostlySimilar(deduped.sections)) {
+  if (
+    severeDuplicationBefore ||
+    severeDuplicationAfter ||
+    hasRawLeak ||
+    sectionsLookMostlySimilar(deduped.sections) ||
+    (withoutRawLeaks.removed > 0 && remainingSynthesisItems.length === 0)
+  ) {
     const qualityFallback: GeneratedFiche = {
       ...fiche,
-      status: fiche.status === "Non abordé" ? "Non abordé" : ("À compléter" as FicheStatus),
+      status: fiche.status === NON_ABORDE_STATUS ? NON_ABORDE_STATUS : (COMPLETE_LATER_STATUS as FicheStatus),
       summary:
         "La réponse contient des éléments utiles, mais la synthèse automatique n’a pas réussi à les structurer correctement. Veuillez consulter la réponse brute.",
       key_technical_points: [],
@@ -436,7 +566,7 @@ function improveFicheQuality(fiche: GeneratedFiche, answerText: string): Generat
   }
 
   const dedupedStatus: FicheStatus =
-    deduped.removed > 0 && fiche.status === "Exploitable" ? "Réponse partielle" : fiche.status;
+    (deduped.removed > 0 || withoutRawLeaks.removed > 0) && fiche.status === USABLE_STATUS ? PARTIAL_STATUS : fiche.status;
   const dedupedFiche: GeneratedFiche = {
     ...fiche,
     key_technical_points: deduped.sections.key_technical_points,
@@ -446,7 +576,11 @@ function improveFicheQuality(fiche: GeneratedFiche, answerText: string): Generat
     open_questions_missing_points: deduped.sections.open_questions_missing_points,
     status: dedupedStatus,
   };
-  return applySectionFallbacks(dedupedFiche);
+  const withFallbacks = applySectionFallbacks(dedupedFiche);
+  return {
+    ...withFallbacks,
+    status: enforceStatus(answerText, withFallbacks),
+  };
 }
 
 function validateFiche(
@@ -474,7 +608,7 @@ function validateFiche(
   const base = {
     theme_id: themeId,
     theme_title: title,
-    status: status === "Non abordé" ? inferStatus(answer.answer_text) : status,
+    status: status === NON_ABORDE_STATUS ? inferStatus(answer.answer_text) : status,
     summary: cleanText(candidate.summary, 900) || compactSummaryFromAnswer(answer.answer_text),
     key_technical_points: stringList(candidate.key_technical_points),
     reasoning_heuristics: stringList(candidate.reasoning_heuristics),
@@ -587,7 +721,7 @@ async function askOpenAi(
         {
           role: "system",
           content:
-            "Tu génères des fiches techniques NumerHyd à partir d'un entretien. Tu extrais des idées, tu synthétises et tu classes le contenu capturé en bullets courts. Tu ne dois jamais citer, coller ou recopier un paragraphe du transcript brut dans les sections de synthèse. Le texte brut appartient uniquement à la section de vérification côté manager, pas à la fiche générée. Tu n'utilises que le contenu capturé fourni. Tu n'ajoutes aucune connaissance hydraulique générale, aucun fait inventé, aucune hypothèse non dite. Si une information manque, tu écris explicitement: Non précisé dans l’entretien. Tu écris en français simple, pratique, précis et nuancé.",
+            "Tu génères des fiches techniques NumerHyd à partir d'un entretien. Tu dois extraire les idées, les synthétiser, les classer et les réécrire en bullets courts. Tu ne dois jamais citer, coller ou recopier le transcript brut dans les sections de synthèse. Le texte brut appartient uniquement à la section de vérification côté manager, pas à la fiche générée. Les bullets doivent être courts, distincts, idéalement sous 25 mots, et chaque section doit contenir une information différente. Tu n'utilises que le contenu capturé fourni. Tu n'ajoutes aucune connaissance hydraulique générale, aucun fait inventé, aucune hypothèse non dite. Si une information manque, tu écris explicitement: Non précisé dans l’entretien. Tu écris en français simple, pratique, précis et nuancé.",
         },
         {
           role: "user",
@@ -606,17 +740,23 @@ async function askOpenAi(
               "Ne copie pas une même phrase dans plusieurs sections.",
               "Ne colle pas le transcript brut comme item de liste; le transcript reste visible séparément côté manager.",
               "Ne cite pas le raw transcript sauf dans source_references.",
+              "Ne transforme jamais un paragraphe du transcript en bullet long. Extrais l'idée et reformule-la.",
+              "Aucun bullet de synthèse ne doit reprendre plus de 10 mots consécutifs du transcript brut.",
               "Reformule en bullets concis, idéalement moins de 25 mots par bullet.",
+              "Si tu as besoin d'écrire plus de 30 mots, découpe en plusieurs bullets distincts ou écris Non précisé dans l’entretien.",
               "Chaque bullet doit exprimer une seule idée extraite.",
               "Chaque section doit contenir une information différente.",
               "N’utilise jamais le même bullet, la même phrase ou le même paragraphe dans deux sections.",
               "Si un contenu ne peut pas être classé dans une section, écris: Non précisé dans l’entretien.",
               "Chaque section a un rôle distinct.",
               "key_technical_points contient uniquement des faits techniques explicitement dits: choix matière, procédé, contrôle, contrainte, préférence technique. Si rien n'est clair, utiliser exactement: Aucune connaissance technique exploitable n’a été clairement capturée sur ce point.",
-              "reasoning_heuristics contient uniquement logique de décision, règle pratique, arbitrage ou raisonnement diagnostic. Si absent, utiliser exactement: Le raisonnement derrière la décision n’a pas encore été explicité.",
+              "reasoning_heuristics contient uniquement logique de décision, règle pratique, arbitrage ou raisonnement diagnostic. Si absent, utiliser exactement: Le raisonnement n’a pas été clairement explicité dans l’entretien.",
               "examples_customer_cases contient uniquement exemples réels, cas client, incident ou situation terrain. Si l'exemple est vague, dire qu'il est incomplet. Si absent, utiliser exactement: Aucun exemple concret suffisamment détaillé n’a été mentionné.",
               "risks_mistakes_to_avoid contient uniquement risques ou erreurs explicitement mentionnés ou clairement impliqués. Si absent, utiliser exactement: Les risques ou erreurs à éviter n’ont pas été précisés.",
               "open_questions_missing_points doit activement lister ce qu'il faut clarifier quand la réponse est vague.",
+              "Le status Exploitable est interdit si l'expert dit qu'il n'est pas précis, qu'il ne connaît pas la règle, qu'il faut demander à plus expert, ou qu'il manque un exemple.",
+              "Pour une réponse sur traitements de surface où l'expert dit ne pas être précis, ne pas connaître la règle exacte, et devoir demander à plus expert, utiliser Réponse partielle ou À compléter, jamais Exploitable.",
+              "Pour une réponse faible sur traitements de surface, les questions ouvertes doivent clarifier les règles de choix, les standards utilisés, le propriétaire de l'expertise, et les exemples concrets.",
               "Pour Blocs forés, classifier ainsi quand ces idées sont présentes: connaissances = fonction du bloc, schéma, débits, pressions, sécurité, contraintes de montage, usinabilité, montage, contrôle, dépannage; raisonnement = penser au contrôle final, éviter la compacité risquée, accepter d’agrandir pour fiabilité/contrôle; exemples = cas client ou machine mobile; risques = perçages proches, croisements dangereux, bouchons difficiles, zone faible, contrôle difficile.",
             ],
           }),

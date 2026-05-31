@@ -102,7 +102,8 @@
       answeredQuestions: "questions répondues",
       topicsCovered: "thèmes abordés",
       topicsRemaining: "thèmes restants",
-      totalTime: "temps total passé",
+      recordedAnswers: "Réponses enregistrées",
+      completedThemes: "Thèmes complétés",
       sessionsCount: "sessions",
       expertiseSheetsArea: "Fiches d’expertise technique",
       expertiseSheetsIntro: "Consultez les connaissances capturées, organisées par thème.",
@@ -351,6 +352,8 @@
       progressLabel: "Progress",
       sectionsDone: "sections completed",
       lastUpdated: "Updated",
+      recordedAnswers: "Recorded answers",
+      completedThemes: "Completed themes",
       statusDone: "done",
       statusProgress: "in progress",
       statusNotStarted: "not started",
@@ -1188,6 +1191,11 @@
         .filter((message) => message.role === "user" && themeIds.includes(message.sectionId))
         .map((message) => message.sectionId),
     ).size;
+  }
+
+  function getRecordedAnswerCount(session) {
+    if (!session || !Array.isArray(session.messages)) return 0;
+    return session.messages.filter((message) => message.role === "user" && message.content).length;
   }
 
   function isInterviewComplete(session) {
@@ -3063,7 +3071,7 @@
                         <small>${escapeHtml(item.profile || item.roleTitle)}</small>
                       </span>
                       <span class="status-pill">${escapeHtml(getDashboardStatus(item))}</span>
-                      <span class="row-progress">${escapeHtml(formatDuration(item.durationMinutes))} · ${escapeHtml(formatSessionCount(item.sessionCount))}</span>
+                      <span class="row-progress">${getAnsweredThemeCount(item)}/${getSessionThemeIds(item).length} ${escapeHtml(copy.completedThemes.toLowerCase())}</span>
                     </button>
                     <button class="button-subtle delete-interview-button" data-action="delete-interview" data-session-id="${escapeHtml(item.id)}">${escapeHtml(copy.deleteInterview)}</button>
                   </div>
@@ -3082,8 +3090,8 @@
                       <span class="status-pill">${escapeHtml(getDashboardStatus(selectedSession))}</span>
                     </div>
                     <div class="list-metrics">
-                      <div class="stat"><span class="helper-note">${copy.totalTime}</span><strong>${escapeHtml(formatDuration(selectedSession.durationMinutes))}</strong></div>
-                      <div class="stat"><span class="helper-note">${copy.sessionsCount}</span><strong>${selectedSession.sessionCount || 0}</strong></div>
+                      <div class="stat"><span class="helper-note">${escapeHtml(copy.recordedAnswers)}</span><strong>${getRecordedAnswerCount(selectedSession)}</strong></div>
+                      <div class="stat"><span class="helper-note">${escapeHtml(copy.completedThemes)}</span><strong>${getAnsweredThemeCount(selectedSession)}/${getSessionThemeIds(selectedSession).length}</strong></div>
                       <div class="stat"><span class="helper-note">${copy.lastUpdated}</span><strong style="font-size:18px;">${escapeHtml(formatDate(selectedSession.updatedAt))}</strong></div>
                     </div>
                     <p class="manager-link-help"><strong>Thèmes abordés :</strong> ${escapeHtml(formatThemeList(selectedAnsweredThemeIds))}</p>
@@ -3779,8 +3787,8 @@
         <div class="stats-grid synthesis-stats">
           <div class="stat"><span class="helper-note">Statut</span><strong>${escapeHtml(getSessionStatus(session))}</strong></div>
           <div class="stat"><span class="helper-note">Fiches commencées</span><strong>${getAnsweredThemeCount(session)}/${selectedThemeIds.length}</strong></div>
-          <div class="stat"><span class="helper-note">${copy.sessionsCount}</span><strong>${session.sessionCount || 0}</strong></div>
-          <div class="stat"><span class="helper-note">${copy.totalTime}</span><strong>${escapeHtml(formatDuration(session.durationMinutes))}</strong></div>
+          <div class="stat"><span class="helper-note">${escapeHtml(copy.recordedAnswers)}</span><strong>${getRecordedAnswerCount(session)}</strong></div>
+          <div class="stat"><span class="helper-note">${escapeHtml(copy.completedThemes)}</span><strong>${getAnsweredThemeCount(session)}/${selectedThemeIds.length}</strong></div>
           <div class="stat"><span class="helper-note">${copy.lastUpdated}</span><strong style="font-size:20px;">${escapeHtml(formatDate(session.updatedAt))}</strong></div>
         </div>
         <section class="section-card synthesis-card">
