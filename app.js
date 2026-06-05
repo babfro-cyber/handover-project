@@ -2542,7 +2542,7 @@
       case "transcribing":
         return copy.transcribingAudio;
       case "ready":
-        return copy.transcriptReady;
+        return copy.recordingIdle;
       case "failed":
         return appState.audio.error || copy.transcriptionFailed;
       case "denied":
