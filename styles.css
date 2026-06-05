@@ -644,15 +644,15 @@ button {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 12px;
-  margin-top: 28px;
+  gap: 8px;
+  margin-top: 16px;
   padding: 0;
   border: 0;
   background: transparent;
 }
 
 .microphone-button {
-  min-height: 64px;
+  min-height: 56px;
   padding: 0 26px;
   font-size: 20px;
 }
@@ -685,7 +685,7 @@ button {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 28px 0;
+  padding: 18px 0;
 }
 
 .expert-card {
@@ -695,6 +695,17 @@ button {
   border-radius: var(--radius-card);
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--soft-shadow);
+}
+
+.expert-card.question-focus {
+  width: min(100%, 860px);
+  max-height: calc(100dvh - 132px);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: clamp(18px, 2.4vw, 28px);
 }
 
 .expert-card.centered {
@@ -717,9 +728,9 @@ button {
 }
 
 .expert-question {
-  margin: 22px 0 0;
+  margin: 14px 0 0;
   font-family: "Newsreader", Georgia, serif;
-  font-size: clamp(30px, 3.4vw, 40px);
+  font-size: clamp(28px, 3vw, 36px);
   line-height: 1.12;
 }
 
@@ -728,7 +739,7 @@ button {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px 14px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .question-listen-button {
@@ -765,23 +776,37 @@ button {
 }
 
 .expert-meter {
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .transcription-block {
-  margin-top: 24px;
+  margin-top: 16px;
+}
+
+.question-focus .transcription-block {
+  min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
 .transcript-review-note {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   color: var(--ok);
   font-size: 14px;
   font-weight: 800;
 }
 
 .expert-textarea {
-  min-height: 150px;
+  min-height: 126px;
   font-size: 19px;
+}
+
+.question-focus .expert-textarea {
+  min-height: 112px;
+  max-height: min(24vh, 220px);
+  overflow-y: auto;
+  resize: vertical;
 }
 
 .micro-status {
@@ -801,6 +826,16 @@ button {
   margin-top: 24px;
 }
 
+.question-focus .expert-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 14px calc(clamp(18px, 2.4vw, 28px) * -1) 0;
+  padding: 12px clamp(18px, 2.4vw, 28px) 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.97) 32%);
+  backdrop-filter: blur(8px);
+}
+
 .expert-actions.single {
   display: block;
   margin-top: 28px;
@@ -808,7 +843,7 @@ button {
 
 .expert-primary,
 .expert-secondary {
-  min-height: 62px;
+  min-height: 54px;
   font-size: 18px;
 }
 
@@ -1245,6 +1280,11 @@ button {
 
   .expert-card {
     padding: 24px;
+  }
+
+  .expert-card.question-focus {
+    max-height: none;
+    overflow-y: visible;
   }
 
   .expert-actions {
