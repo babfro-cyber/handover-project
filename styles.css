@@ -644,8 +644,8 @@ button {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
-  margin-top: 18px;
+  gap: 6px;
+  margin-top: 12px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -685,7 +685,7 @@ button {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 18px 0 28px;
+  padding: 8px 0 20px;
 }
 
 .expert-card {
@@ -699,7 +699,7 @@ button {
 
 .expert-card.question-focus {
   width: min(100%, 820px);
-  padding: clamp(20px, 2.8vw, 30px);
+  padding: clamp(16px, 2.1vw, 24px);
 }
 
 .expert-card.centered {
@@ -722,24 +722,25 @@ button {
 }
 
 .expert-question {
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   font-family: "Newsreader", Georgia, serif;
-  font-size: clamp(28px, 3vw, 36px);
-  line-height: 1.12;
+  font-size: clamp(26px, 2.55vw, 34px);
+  line-height: 1.08;
 }
 
 .question-listen {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
-  margin-top: 12px;
+  gap: 8px 12px;
+  margin-top: 10px;
 }
 
 .question-listen-button {
   width: auto;
-  min-height: 42px;
-  padding: 0 16px;
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 15px;
 }
 
 .question-voice-disclosure,
@@ -765,16 +766,16 @@ button {
   justify-content: space-between;
   gap: 16px;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
 }
 
 .expert-meter {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .transcription-block {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .question-focus .transcription-block {
@@ -789,13 +790,15 @@ button {
 }
 
 .expert-textarea {
-  min-height: 160px;
-  font-size: 19px;
+  min-height: 144px;
+  padding: 14px 16px;
+  font-size: 18px;
+  line-height: 1.55;
 }
 
 .question-focus .expert-textarea {
-  min-height: 160px;
-  max-height: 220px;
+  min-height: 144px;
+  max-height: 190px;
   overflow-y: auto;
   resize: vertical;
 }
@@ -807,18 +810,19 @@ button {
   gap: 10px;
   margin: 0;
   color: var(--muted);
+  font-size: 15px;
   font-weight: 700;
 }
 
 .expert-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(180px, 0.45fr);
-  gap: 14px;
+  gap: 12px;
   margin-top: 24px;
 }
 
 .question-focus .expert-actions {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .expert-actions.single {
@@ -828,8 +832,8 @@ button {
 
 .expert-primary,
 .expert-secondary {
-  min-height: 48px;
-  font-size: 18px;
+  min-height: 44px;
+  font-size: 17px;
 }
 
 .expert-finish {
@@ -1125,6 +1129,12 @@ button {
   font-size: 15px;
   line-height: 1.55;
   color: var(--muted);
+}
+
+.question-focus .question-meta {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 .panel-compact {
