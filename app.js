@@ -6,6 +6,8 @@
     documents: "knowledge-capture.static.documents",
     demoVersion: "knowledge-capture.static.demo-version",
     managerTokens: "knowledge-capture.static.manager-tokens",
+    ficheGenerationLocks: "knowledge-capture.static.fiche-generation-locks",
+    ficheGenerationAutoAttempts: "knowledge-capture.static.fiche-generation-auto-attempts",
   };
 
   const DEMO_VERSION = "cockpit-v9";
@@ -41,6 +43,8 @@
     "audio/wav",
   ];
   const MAX_REMOTE_FOLLOWUPS = 2;
+  const FICHE_GENERATION_LOCK_TTL_MS = 5 * 60 * 1000;
+  const FICHE_GENERATION_POLL_MS = 4000;
 
   const dictionaries = {
     fr: {
@@ -157,7 +161,12 @@
       questionAudioFailed: "La lecture audio n’a pas pu démarrer. La question écrite reste disponible.",
       generateFiches: "Générer les fiches",
       regenerateFiches: "Regénérer les fiches",
-      generatingFiches: "Génération des fiches…",
+      generatingFiches: "Génération en cours…",
+      retryGenerateFiches: "Réessayer",
+      ficheGenerationLoading: "Génération des fiches techniques en cours…",
+      ficheGenerationSuccess: "Fiches techniques générées",
+      ficheGenerationInProgress: "Les fiches techniques sont en cours de génération.",
+      ficheGenerationAfterCompletion: "Les fiches pourront être générées une fois l’entretien terminé.",
       ficheGenerationFailed: "La génération des fiches a échoué. Les réponses brutes restent disponibles.",
       deleteInterview: "Supprimer",
       deleteInterviewConfirm: "Supprimer cet entretien ? Cette action supprimera les réponses associées.",
@@ -321,7 +330,12 @@
       questionAudioFailed: "Audio playback could not start. The written question remains available.",
       generateFiches: "Generate sheets",
       regenerateFiches: "Regenerate sheets",
-      generatingFiches: "Generating sheets…",
+      generatingFiches: "Generation in progress…",
+      retryGenerateFiches: "Retry",
+      ficheGenerationLoading: "Generating technical sheets…",
+      ficheGenerationSuccess: "Technical sheets generated",
+      ficheGenerationInProgress: "Technical sheets are being generated.",
+      ficheGenerationAfterCompletion: "Sheets can be generated once the interview is completed.",
       ficheGenerationFailed: "Sheet generation failed. Raw answers remain available.",
       deleteInterview: "Delete",
       deleteInterviewConfirm: "Delete this interview? This will delete the associated answers.",
@@ -465,6 +479,9 @@
       ficheGenerationLoading: false,
       ficheGenerationSessionId: "",
       ficheGenerationError: "",
+      ficheGenerationErrorSessionId: "",
+      ficheGenerationSuccessSessionId: "",
+      ficheGenerationRefreshSessionId: "",
       dashboardMessage: "",
     },
     questionAudio: {
@@ -554,6 +571,62 @@
     } catch {
       // Ignore localStorage write failures for this prototype.
     }
+  }
+
+  function loadStoredObject(key) {
+    const value = loadJson(key, {});
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  }
+
+  function saveStoredObject(key, value) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // Ignore localStorage write failures for this prototype.
+    }
+  }
+
+  function getFicheGenerationLock(sessionId) {
+    if (!sessionId) return null;
+    const locks = loadStoredObject(STORAGE_KEYS.ficheGenerationLocks);
+    const expiresAt = Number(locks[sessionId] || 0);
+    if (!expiresAt) return null;
+
+    if (expiresAt <= Date.now()) {
+      delete locks[sessionId];
+      saveStoredObject(STORAGE_KEYS.ficheGenerationLocks, locks);
+      return null;
+    }
+
+    return expiresAt;
+  }
+
+  function setFicheGenerationLock(sessionId) {
+    if (!sessionId) return;
+    const locks = loadStoredObject(STORAGE_KEYS.ficheGenerationLocks);
+    locks[sessionId] = Date.now() + FICHE_GENERATION_LOCK_TTL_MS;
+    saveStoredObject(STORAGE_KEYS.ficheGenerationLocks, locks);
+  }
+
+  function clearFicheGenerationLock(sessionId) {
+    if (!sessionId) return;
+    const locks = loadStoredObject(STORAGE_KEYS.ficheGenerationLocks);
+    if (locks[sessionId]) {
+      delete locks[sessionId];
+      saveStoredObject(STORAGE_KEYS.ficheGenerationLocks, locks);
+    }
+  }
+
+  function hasAutoFicheGenerationAttempt(sessionId) {
+    if (!sessionId) return false;
+    return Boolean(loadStoredObject(STORAGE_KEYS.ficheGenerationAutoAttempts)[sessionId]);
+  }
+
+  function markAutoFicheGenerationAttempt(sessionId) {
+    if (!sessionId) return;
+    const attempts = loadStoredObject(STORAGE_KEYS.ficheGenerationAutoAttempts);
+    attempts[sessionId] = new Date().toISOString();
+    saveStoredObject(STORAGE_KEYS.ficheGenerationAutoAttempts, attempts);
   }
 
   function uniqueStrings(values) {
@@ -1202,9 +1275,13 @@
     return getAnsweredThemeCount(session) >= getSessionThemeIds(session).length || session.completionPercent >= 100;
   }
 
+  function isInterviewMarkedComplete(session) {
+    return Boolean(session?.completedAt || (session?.finishedAt && isInterviewComplete(session)));
+  }
+
   function getSessionStatus(session) {
     const copy = dictionary();
-    if (session.completedAt || (session.finishedAt && isInterviewComplete(session))) return copy.statusDone;
+    if (isInterviewMarkedComplete(session)) return copy.statusDone;
     if (session.partialSubmittedAt || (session.finishedAt && !isInterviewComplete(session))) return copy.statusPartial;
     if (session.pausedAt) return copy.statusPaused;
     if (session.startedAt || getAnsweredThemeCount(session) > 0) return copy.statusProgress;
@@ -1213,7 +1290,7 @@
 
   function getDashboardStatus(session) {
     const copy = dictionary();
-    if (session.completedAt || (session.finishedAt && isInterviewComplete(session))) return copy.statusDone;
+    if (isInterviewMarkedComplete(session)) return copy.statusDone;
     if (session.startedAt || session.pausedAt || session.partialSubmittedAt || getAnsweredThemeCount(session) > 0) {
       return copy.statusProgress;
     }
@@ -1771,6 +1848,112 @@
     }
 
     throw lastError || new Error(dictionary().ficheGenerationFailed);
+  }
+
+  async function refreshRemoteManagerDetail(interviewId) {
+    const managerTokens = getStoredManagerTokens();
+    let lastError = null;
+    for (const managerToken of managerTokens) {
+      try {
+        return await loadRemoteManagerDetail(managerToken, interviewId);
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (lastError) throw lastError;
+    return null;
+  }
+
+  function hasGeneratedFiches(session) {
+    return (session?.technicalFiches || []).length > 0;
+  }
+
+  function canAutoGenerateFiches(session, options = {}) {
+    if (!backendAvailable() || session?.source !== "supabase") return false;
+    if (!isInterviewMarkedComplete(session)) return false;
+    if (hasGeneratedFiches(session)) return false;
+    if (appState.backend.ficheGenerationLoading && appState.backend.ficheGenerationSessionId === session.id) return false;
+    if (!options.ignoreAttempt && hasAutoFicheGenerationAttempt(session.id)) return false;
+    return true;
+  }
+
+  async function runFicheGeneration(session, options = {}) {
+    const automatic = options.automatic === true;
+    const latestSession = session?.id ? getSessionById(session.id) || session : session;
+    if (!latestSession || latestSession.source !== "supabase") return null;
+    if (!isInterviewMarkedComplete(latestSession)) return null;
+    if (automatic && !canAutoGenerateFiches(latestSession, { ignoreAttempt: true })) return null;
+    if (appState.backend.ficheGenerationLoading && appState.backend.ficheGenerationSessionId === latestSession.id) {
+      return null;
+    }
+
+    appState.backend.ficheGenerationLoading = true;
+    appState.backend.ficheGenerationSessionId = latestSession.id;
+    appState.backend.ficheGenerationError = "";
+    appState.backend.ficheGenerationErrorSessionId = "";
+    appState.backend.ficheGenerationSuccessSessionId = "";
+    setFicheGenerationLock(latestSession.id);
+    render();
+
+    try {
+      const nextSession = await generateRemoteFiches(latestSession);
+      appState.backend.ficheGenerationSuccessSessionId = latestSession.id;
+      return nextSession;
+    } catch {
+      appState.backend.ficheGenerationError = dictionary().ficheGenerationFailed;
+      appState.backend.ficheGenerationErrorSessionId = latestSession.id;
+      return null;
+    } finally {
+      appState.backend.ficheGenerationLoading = false;
+      appState.backend.ficheGenerationSessionId = "";
+      clearFicheGenerationLock(latestSession.id);
+      render();
+    }
+  }
+
+  function queueFicheGenerationStatusRefresh(session) {
+    if (!session?.id || hasGeneratedFiches(session)) return;
+    if (!getFicheGenerationLock(session.id)) return;
+    if (appState.backend.ficheGenerationLoading && appState.backend.ficheGenerationSessionId === session.id) return;
+    if (appState.backend.ficheGenerationRefreshSessionId === session.id) return;
+
+    appState.backend.ficheGenerationRefreshSessionId = session.id;
+    window.setTimeout(async () => {
+      try {
+        const nextSession = await refreshRemoteManagerDetail(session.id);
+        if (hasGeneratedFiches(nextSession)) {
+          appState.backend.ficheGenerationSuccessSessionId = session.id;
+          clearFicheGenerationLock(session.id);
+        }
+      } catch {
+        // Keep the synthesis usable; the manual generation button remains available after the lock expires.
+      } finally {
+        if (appState.backend.ficheGenerationRefreshSessionId === session.id) {
+          appState.backend.ficheGenerationRefreshSessionId = "";
+        }
+        render();
+      }
+    }, FICHE_GENERATION_POLL_MS);
+  }
+
+  function queueAutoFicheGeneration(route) {
+    if (route.name !== "manager" || !route.sessionId) return;
+    const session = getSessionById(route.sessionId);
+    if (!session || hasGeneratedFiches(session)) return;
+
+    if (getFicheGenerationLock(session.id)) {
+      queueFicheGenerationStatusRefresh(session);
+      return;
+    }
+
+    if (!canAutoGenerateFiches(session)) return;
+
+    markAutoFicheGenerationAttempt(session.id);
+    window.setTimeout(() => {
+      const latestSession = getSessionById(session.id);
+      runFicheGeneration(latestSession, { automatic: true });
+    }, 0);
   }
 
   async function deleteRemoteInterview(session) {
@@ -2821,6 +3004,7 @@
     }
     bindCommonEvents();
     bindViewEvents(route);
+    queueAutoFicheGeneration(route);
     if (appState.pendingQuestionScroll) {
       appState.pendingQuestionScroll = false;
       window.requestAnimationFrame(scrollQuestionIntoView);
@@ -3759,8 +3943,32 @@
       ? appState.currentDocId
       : null;
     const generatedFicheCount = (session.technicalFiches || []).length;
+    const hasFiches = generatedFicheCount > 0;
+    const isCompleted = isInterviewMarkedComplete(session);
+    const hasGenerationLock = Boolean(getFicheGenerationLock(session.id));
     const isGeneratingFiches =
-      appState.backend.ficheGenerationLoading && appState.backend.ficheGenerationSessionId === session.id;
+      (appState.backend.ficheGenerationLoading && appState.backend.ficheGenerationSessionId === session.id) ||
+      (hasGenerationLock && !hasFiches);
+    const generationError =
+      appState.backend.ficheGenerationErrorSessionId === session.id ? appState.backend.ficheGenerationError : "";
+    const generationSucceeded = appState.backend.ficheGenerationSuccessSessionId === session.id && hasFiches;
+    const ficheButtonLabel = isGeneratingFiches
+      ? copy.generatingFiches
+      : hasFiches
+        ? copy.regenerateFiches
+        : generationError
+          ? copy.retryGenerateFiches
+          : copy.generateFiches;
+    const ficheButtonDisabled = isGeneratingFiches || !isCompleted;
+    const ficheStatusMessage = isGeneratingFiches
+      ? copy.ficheGenerationLoading
+      : generationSucceeded
+        ? copy.ficheGenerationSuccess
+        : !isCompleted
+          ? copy.ficheGenerationAfterCompletion
+          : !hasFiches && !generationError
+            ? copy.ficheGenerationInProgress
+            : "";
 
     if (activeThemeId) {
       return renderThemeFicheDetail(session, expertiseDoc, activeThemeId);
@@ -3798,14 +4006,15 @@
           ${
             session.source === "supabase" && backendAvailable()
               ? `<div class="synthesis-action-row">
-                  <button class="button" data-action="generate-fiches" ${isGeneratingFiches ? "disabled" : ""}>
-                    ${escapeHtml(isGeneratingFiches ? copy.generatingFiches : generatedFicheCount ? copy.regenerateFiches : copy.generateFiches)}
+                  <button class="button" data-action="generate-fiches" ${ficheButtonDisabled ? "disabled" : ""}>
+                    ${escapeHtml(ficheButtonLabel)}
                   </button>
                   <span class="helper-note">${generatedFicheCount}/${selectedThemeIds.length} fiches générées</span>
                 </div>`
               : ""
           }
-          ${appState.backend.ficheGenerationError ? `<p class="helper-note error-note">${escapeHtml(appState.backend.ficheGenerationError)}</p>` : ""}
+          ${ficheStatusMessage ? `<p class="helper-note">${escapeHtml(ficheStatusMessage)}</p>` : ""}
+          ${generationError ? `<p class="helper-note error-note">${escapeHtml(generationError)}</p>` : ""}
           ${renderThemeFicheCards(session)}
         </section>
       </div>
@@ -4418,19 +4627,7 @@
           return;
         }
 
-        appState.backend.ficheGenerationLoading = true;
-        appState.backend.ficheGenerationSessionId = session.id;
-        appState.backend.ficheGenerationError = "";
-        render();
-        try {
-          await generateRemoteFiches(session);
-        } catch (error) {
-          appState.backend.ficheGenerationError = error.message || dictionary().ficheGenerationFailed;
-        } finally {
-          appState.backend.ficheGenerationLoading = false;
-          appState.backend.ficheGenerationSessionId = "";
-          render();
-        }
+        await runFicheGeneration(session);
       });
     });
 
