@@ -1,0 +1,943 @@
+{
+  "meta": {
+    "name": "NumerHyd hydraulic glossary v1",
+    "purpose": "Glossaire assisté pour correction de transcription, relances métier et génération de fiches. Ce n’est pas un modèle entraîné.",
+    "source": "Cours composants hydrauliques sur blocs forés + questions Gatien",
+    "language": "fr-FR"
+  },
+  "transcriptionCorrectionPolicy": {
+    "principles": [
+      "Corriger uniquement les erreurs probables liées au vocabulaire hydraulique.",
+      "Ne pas reformuler le fond de la réponse.",
+      "Conserver les hésitations utiles et les incertitudes techniques.",
+      "Signaler les corrections incertaines plutôt que les appliquer silencieusement.",
+      "Ne jamais inventer une référence technique absente de la transcription."
+    ],
+    "confidenceLabels": [
+      "certain",
+      "probable",
+      "incertain"
+    ]
+  },
+  "coreTerms": [
+    {
+      "term": "bloc foré",
+      "aliases": [
+        "manifold",
+        "bloc de distribution"
+      ],
+      "category": "concept",
+      "definition": "Corps métallique percé de canaux internes reliant les orifices et composants.",
+      "transcriptionHints": [
+        "bloc forêt",
+        "bloc fore",
+        "manifold"
+      ]
+    },
+    {
+      "term": "P / T / A / B",
+      "aliases": [
+        "pression",
+        "tank",
+        "actionneur A",
+        "actionneur B"
+      ],
+      "category": "orifices",
+      "definition": "Repères hydrauliques : P pression, T retour réservoir, A/B sorties vers actionneur.",
+      "transcriptionHints": [
+        "PTAB",
+        "P T A B",
+        "Pété A B"
+      ]
+    },
+    {
+      "term": "pression",
+      "aliases": [
+        "bar"
+      ],
+      "category": "grandeur hydraulique",
+      "definition": "Grandeur qui détermine l’effort.",
+      "transcriptionHints": [
+        "bars",
+        "barre"
+      ]
+    },
+    {
+      "term": "débit",
+      "aliases": [
+        "L/min",
+        "litres par minute"
+      ],
+      "category": "grandeur hydraulique",
+      "definition": "Grandeur qui détermine la vitesse.",
+      "transcriptionHints": [
+        "litres minute",
+        "l par minute"
+      ]
+    },
+    {
+      "term": "tarage",
+      "aliases": [
+        "pression de réglage"
+      ],
+      "category": "réglage",
+      "definition": "Réglage de pression d’un limiteur ou d’une valve.",
+      "transcriptionHints": [
+        "tara-ge",
+        "tarraj",
+        "réglage"
+      ]
+    },
+    {
+      "term": "proportionnel",
+      "aliases": [
+        "commande proportionnelle"
+      ],
+      "category": "composant",
+      "definition": "Composant dosant débit ou pression selon un signal électrique.",
+      "transcriptionHints": [
+        "proportionnelle",
+        "propo"
+      ]
+    }
+  ],
+  "standards": [
+    {
+      "term": "CETOP",
+      "aliases": [
+        "ISO 4401",
+        "NG"
+      ],
+      "category": "standard montage flasqué",
+      "definition": "Standard de plan de pose pour composants flasqués.",
+      "transcriptionHints": [
+        "C top",
+        "setop",
+        "cet op"
+      ]
+    },
+    {
+      "term": "CETOP 2",
+      "aliases": [
+        "NG4"
+      ],
+      "category": "standard montage flasqué",
+      "definition": "Petit plan de pose, pilotage, débit typique faible.",
+      "transcriptionHints": [
+        "C top 2",
+        "NG quatre"
+      ]
+    },
+    {
+      "term": "CETOP 3",
+      "aliases": [
+        "NG6",
+        "ISO 4401-03"
+      ],
+      "category": "standard montage flasqué",
+      "definition": "Taille très courante en hydraulique industrielle.",
+      "transcriptionHints": [
+        "C top 3",
+        "cetop trois",
+        "NG six"
+      ]
+    },
+    {
+      "term": "CETOP 5",
+      "aliases": [
+        "NG10"
+      ],
+      "category": "standard montage flasqué",
+      "definition": "Taille moyenne pour débits plus élevés.",
+      "transcriptionHints": [
+        "C top 5",
+        "NG dix"
+      ]
+    },
+    {
+      "term": "CETOP 7",
+      "aliases": [
+        "NG16"
+      ],
+      "category": "standard montage flasqué",
+      "definition": "Grande taille pour forts débits.",
+      "transcriptionHints": [
+        "C top 7",
+        "NG seize"
+      ]
+    },
+    {
+      "term": "CETOP 8",
+      "aliases": [
+        "NG32"
+      ],
+      "category": "standard montage flasqué",
+      "definition": "Très grande taille pour très forts débits.",
+      "transcriptionHints": [
+        "C top 8",
+        "NG trente-deux"
+      ]
+    },
+    {
+      "term": "SUN",
+      "aliases": [
+        "Sun Hydraulics"
+      ],
+      "category": "standard cartouche",
+      "definition": "Référence mondiale des cavités et cartouches vissées.",
+      "transcriptionHints": [
+        "sonne",
+        "sun hydraulique"
+      ]
+    },
+    {
+      "term": "SAE J518",
+      "aliases": [
+        "brides SAE"
+      ],
+      "category": "standard bride",
+      "definition": "Norme de brides haute pression Code 61 et Code 62.",
+      "transcriptionHints": [
+        "SAE",
+        "S A E",
+        "code SAE"
+      ]
+    },
+    {
+      "term": "SAE Code 61",
+      "aliases": [
+        "3000 psi"
+      ],
+      "category": "bride",
+      "definition": "Bride SAE moyenne pression, environ 207 bar.",
+      "transcriptionHints": [
+        "code soixante et un",
+        "code 61"
+      ]
+    },
+    {
+      "term": "SAE Code 62",
+      "aliases": [
+        "6000 psi"
+      ],
+      "category": "bride",
+      "definition": "Bride SAE haute pression, environ 414 bar.",
+      "transcriptionHints": [
+        "code soixante-deux",
+        "code 62"
+      ]
+    },
+    {
+      "term": "BSP",
+      "aliases": [
+        "G",
+        "taraudage BSP"
+      ],
+      "category": "taraudage",
+      "definition": "Standard européen de taraudage hydraulique.",
+      "transcriptionHints": [
+        "B S P",
+        "G un quart",
+        "G1/4"
+      ]
+    },
+    {
+      "term": "NPT",
+      "aliases": [
+        "taraudage NPT"
+      ],
+      "category": "taraudage",
+      "definition": "Standard américain de taraudage.",
+      "transcriptionHints": [
+        "N P T"
+      ]
+    }
+  ],
+  "sunCavities": [
+    {
+      "term": "T-8A",
+      "category": "cavité SUN",
+      "definition": "Cavité cartouche pour pilotage et contrôle de pression petit débit.",
+      "transcriptionHints": [
+        "T huit A",
+        "T8A",
+        "Sun T8"
+      ]
+    },
+    {
+      "term": "T-18A",
+      "category": "cavité SUN",
+      "definition": "Cavité cartouche pour valves réglables / limiteurs.",
+      "transcriptionHints": [
+        "T dix-huit A",
+        "T18A"
+      ]
+    },
+    {
+      "term": "T-21A",
+      "category": "cavité SUN",
+      "definition": "Cavité très courante pour limiteurs, clapets, séquences.",
+      "transcriptionHints": [
+        "T vingt-et-un A",
+        "T21A",
+        "Sun T21"
+      ]
+    },
+    {
+      "term": "T-22A",
+      "category": "cavité SUN",
+      "definition": "Cavité pour limiteurs grand débit.",
+      "transcriptionHints": [
+        "T vingt-deux A",
+        "T22A"
+      ]
+    },
+    {
+      "term": "T-23A",
+      "category": "cavité SUN",
+      "definition": "Cavité pour limiteurs très grand débit.",
+      "transcriptionHints": [
+        "T vingt-trois A",
+        "T23A"
+      ]
+    },
+    {
+      "term": "T-24A",
+      "category": "cavité SUN",
+      "definition": "Cavité haute puissance.",
+      "transcriptionHints": [
+        "T vingt-quatre A",
+        "T24A"
+      ]
+    }
+  ],
+  "componentFamilies": [
+    {
+      "term": "distributeur",
+      "aliases": [
+        "valve directionnelle",
+        "4/3",
+        "4/2"
+      ],
+      "category": "famille composant",
+      "role": "Orienter le débit vers A ou B.",
+      "choiceSignals": [
+        "schéma de tiroir",
+        "taille CETOP",
+        "commande électrique/manuelle/proportionnelle"
+      ],
+      "transcriptionHints": [
+        "distrib",
+        "distributeur quatre trois"
+      ]
+    },
+    {
+      "term": "limiteur de pression",
+      "aliases": [
+        "soupape de sécurité",
+        "relief valve"
+      ],
+      "category": "famille composant",
+      "role": "Plafonner la pression pour protéger le circuit.",
+      "choiceSignals": [
+        "pression de tarage",
+        "débit",
+        "commande directe ou pilotée"
+      ],
+      "transcriptionHints": [
+        "limiteur",
+        "limiteur pression"
+      ]
+    },
+    {
+      "term": "clapet anti-retour",
+      "aliases": [
+        "check valve"
+      ],
+      "category": "famille composant",
+      "role": "Autoriser le passage dans un sens et bloquer l’autre.",
+      "choiceSignals": [
+        "débit",
+        "pression",
+        "pilotage éventuel"
+      ],
+      "transcriptionHints": [
+        "clapé",
+        "clapet"
+      ]
+    },
+    {
+      "term": "clapet piloté",
+      "aliases": [
+        "anti-retour piloté"
+      ],
+      "category": "famille composant",
+      "role": "Maintenir une charge ou un vérin tout en permettant une ouverture commandée.",
+      "choiceSignals": [
+        "rapport de pilotage",
+        "pression",
+        "débit"
+      ],
+      "transcriptionHints": [
+        "clapet piloté"
+      ]
+    },
+    {
+      "term": "valve de contrepoids",
+      "aliases": [
+        "counterbalance"
+      ],
+      "category": "famille composant",
+      "role": "Maintenir une charge entraînante et sécuriser la descente.",
+      "choiceSignals": [
+        "charge",
+        "rapport de pilotage",
+        "pression"
+      ],
+      "transcriptionHints": [
+        "contrepoids",
+        "counter balance"
+      ]
+    },
+    {
+      "term": "réducteur de pression",
+      "aliases": [
+        "pressure reducing valve"
+      ],
+      "category": "famille composant",
+      "role": "Imposer une pression aval réduite.",
+      "choiceSignals": [
+        "pression aval",
+        "débit",
+        "stabilité"
+      ],
+      "transcriptionHints": [
+        "réducteur pression"
+      ]
+    },
+    {
+      "term": "régulateur de débit",
+      "aliases": [
+        "flow control"
+      ],
+      "category": "famille composant",
+      "role": "Contrôler la vitesse d’un actionneur.",
+      "choiceSignals": [
+        "débit réglé",
+        "compensation de pression"
+      ],
+      "transcriptionHints": [
+        "régul débit",
+        "régulateur débit"
+      ]
+    },
+    {
+      "term": "filtre",
+      "aliases": [
+        "filtration"
+      ],
+      "category": "famille composant",
+      "role": "Retenir les particules et protéger le circuit.",
+      "choiceSignals": [
+        "finesse µm",
+        "position retour ou pression",
+        "by-pass",
+        "indicateur colmatage"
+      ],
+      "transcriptionHints": [
+        "filtration",
+        "micron"
+      ]
+    },
+    {
+      "term": "pressostat",
+      "aliases": [
+        "pressure switch"
+      ],
+      "category": "famille composant",
+      "role": "Déclencher un contact quand une pression est atteinte.",
+      "choiceSignals": [
+        "plage",
+        "sortie électrique",
+        "raccord"
+      ],
+      "transcriptionHints": [
+        "presso stat",
+        "pressostat"
+      ]
+    },
+    {
+      "term": "capteur de pression",
+      "aliases": [
+        "transmetteur",
+        "transducteur"
+      ],
+      "category": "famille composant",
+      "role": "Mesurer la pression avec un signal analogique.",
+      "choiceSignals": [
+        "plage",
+        "4–20 mA",
+        "0–10 V"
+      ],
+      "transcriptionHints": [
+        "quatre vingt milliampères",
+        "0 10 volts"
+      ]
+    },
+    {
+      "term": "débitmètre",
+      "aliases": [
+        "flow meter"
+      ],
+      "category": "famille composant",
+      "role": "Mesurer le débit.",
+      "choiceSignals": [
+        "plage",
+        "précision",
+        "pression admissible"
+      ],
+      "transcriptionHints": [
+        "débit maître",
+        "débitmètre"
+      ]
+    },
+    {
+      "term": "vanne d’arrêt",
+      "aliases": [
+        "vanne à bille"
+      ],
+      "category": "famille composant",
+      "role": "Isoler une partie du circuit.",
+      "choiceSignals": [
+        "taille",
+        "pression",
+        "maintenance"
+      ],
+      "transcriptionHints": [
+        "vanne arrêt",
+        "vanne bille"
+      ]
+    },
+    {
+      "term": "bride",
+      "aliases": [
+        "bride SAE"
+      ],
+      "category": "famille composant",
+      "role": "Raccorder la tuyauterie haute pression au bloc.",
+      "choiceSignals": [
+        "code SAE",
+        "taille",
+        "pression"
+      ],
+      "transcriptionHints": [
+        "bride",
+        "brides SAE"
+      ]
+    }
+  ],
+  "manufacturers": [
+    {
+      "term": "Bosch Rexroth",
+      "aliases": [
+        "Rexroth",
+        "Bosch"
+      ],
+      "category": "fabricant",
+      "positioning": "Leader mondial, gamme complète.",
+      "transcriptionHints": [
+        "rex rot",
+        "rexroth"
+      ]
+    },
+    {
+      "term": "Parker Hannifin",
+      "aliases": [
+        "Parker"
+      ],
+      "category": "fabricant",
+      "positioning": "Très large catalogue fluid power.",
+      "transcriptionHints": [
+        "parker"
+      ]
+    },
+    {
+      "term": "Eaton",
+      "aliases": [
+        "Vickers"
+      ],
+      "category": "fabricant",
+      "positioning": "Hydraulique mobile et industrielle, Vickers historique.",
+      "transcriptionHints": [
+        "eaton",
+        "vikers",
+        "vickers"
+      ]
+    },
+    {
+      "term": "Danfoss",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Hydraulique mobile et industrielle.",
+      "transcriptionHints": [
+        "danfoss"
+      ]
+    },
+    {
+      "term": "HYDAC",
+      "aliases": [
+        "Hydac"
+      ],
+      "category": "fabricant",
+      "positioning": "Filtres, capteurs, vannes, accumulateurs, fort en France.",
+      "transcriptionHints": [
+        "hydac",
+        "idac"
+      ]
+    },
+    {
+      "term": "Sun Hydraulics",
+      "aliases": [
+        "SUN"
+      ],
+      "category": "fabricant",
+      "positioning": "Référence des cartouches.",
+      "transcriptionHints": [
+        "sun hydraulique"
+      ]
+    },
+    {
+      "term": "HAWE",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Haute pression, construction tout-métal.",
+      "transcriptionHints": [
+        "hawe",
+        "havé"
+      ]
+    },
+    {
+      "term": "Atos",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Distributeurs, proportionnel, électronique.",
+      "transcriptionHints": [
+        "atos"
+      ]
+    },
+    {
+      "term": "Wandfluh",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Haute fiabilité, Suisse.",
+      "transcriptionHints": [
+        "wandfluh",
+        "vant flou"
+      ]
+    },
+    {
+      "term": "Yuken",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Industrie, machine-outil, Asie.",
+      "transcriptionHints": [
+        "yuken"
+      ]
+    },
+    {
+      "term": "Duplomatic",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Industrie, machine-outil.",
+      "transcriptionHints": [
+        "duplomatic"
+      ]
+    },
+    {
+      "term": "Stauff",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Vannes, accessoires, raccordements.",
+      "transcriptionHints": [
+        "stauff",
+        "stof"
+      ]
+    },
+    {
+      "term": "MP Filtri",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Filtration.",
+      "transcriptionHints": [
+        "MP filtre",
+        "MP filtri"
+      ]
+    },
+    {
+      "term": "Kracht",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Débitmètres.",
+      "transcriptionHints": [
+        "kracht",
+        "kract"
+      ]
+    },
+    {
+      "term": "VSE",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Débitmètres haute précision.",
+      "transcriptionHints": [
+        "V S E"
+      ]
+    },
+    {
+      "term": "Wika",
+      "aliases": [],
+      "category": "fabricant",
+      "positioning": "Transmetteurs de pression.",
+      "transcriptionHints": [
+        "wika"
+      ]
+    }
+  ],
+  "productReferences": [
+    {
+      "term": "4WE6",
+      "category": "référence distributeur",
+      "manufacturer": "Rexroth",
+      "transcriptionHints": [
+        "quatre WE six",
+        "4 W E 6"
+      ]
+    },
+    {
+      "term": "4WE10",
+      "category": "référence distributeur",
+      "manufacturer": "Rexroth",
+      "transcriptionHints": [
+        "4 W E 10"
+      ]
+    },
+    {
+      "term": "D1VW",
+      "category": "référence distributeur",
+      "manufacturer": "Parker",
+      "transcriptionHints": [
+        "D un V W",
+        "D1VW"
+      ]
+    },
+    {
+      "term": "DG4V-3",
+      "category": "référence distributeur",
+      "manufacturer": "Eaton / Vickers",
+      "transcriptionHints": [
+        "DG4V trois"
+      ]
+    },
+    {
+      "term": "DHI",
+      "category": "référence distributeur",
+      "manufacturer": "Atos",
+      "transcriptionHints": [
+        "DHI"
+      ]
+    },
+    {
+      "term": "DBDH",
+      "category": "référence limiteur",
+      "manufacturer": "Rexroth",
+      "transcriptionHints": [
+        "DBDH"
+      ]
+    },
+    {
+      "term": "DB6",
+      "category": "référence limiteur",
+      "manufacturer": "Rexroth",
+      "transcriptionHints": [
+        "DB six"
+      ]
+    },
+    {
+      "term": "RVED",
+      "category": "référence limiteur",
+      "manufacturer": "Sun Hydraulics",
+      "transcriptionHints": [
+        "RVED"
+      ]
+    },
+    {
+      "term": "RVCN",
+      "category": "référence limiteur piloté",
+      "manufacturer": "Sun Hydraulics",
+      "transcriptionHints": [
+        "RVCN"
+      ]
+    },
+    {
+      "term": "Z2S6",
+      "category": "référence clapet",
+      "manufacturer": "Rexroth",
+      "transcriptionHints": [
+        "Z deux S six"
+      ]
+    },
+    {
+      "term": "SV6",
+      "category": "référence clapet",
+      "manufacturer": "Rexroth",
+      "transcriptionHints": [
+        "SV six"
+      ]
+    },
+    {
+      "term": "CBBN",
+      "category": "référence contrepoids",
+      "manufacturer": "Sun Hydraulics",
+      "transcriptionHints": [
+        "CBBN"
+      ]
+    },
+    {
+      "term": "DR6",
+      "category": "référence réducteur",
+      "manufacturer": "Rexroth",
+      "transcriptionHints": [
+        "DR six"
+      ]
+    },
+    {
+      "term": "2FRM6",
+      "category": "référence régulateur débit",
+      "manufacturer": "Rexroth",
+      "transcriptionHints": [
+        "deux FRM six"
+      ]
+    },
+    {
+      "term": "DVP6",
+      "category": "référence régulateur débit",
+      "manufacturer": "HYDAC",
+      "transcriptionHints": [
+        "DVP six"
+      ]
+    },
+    {
+      "term": "DF60",
+      "category": "référence filtre",
+      "manufacturer": "HYDAC",
+      "transcriptionHints": [
+        "DF soixante"
+      ]
+    },
+    {
+      "term": "EDS3",
+      "category": "référence pressostat",
+      "manufacturer": "HYDAC",
+      "transcriptionHints": [
+        "EDS trois"
+      ]
+    },
+    {
+      "term": "HDA3840",
+      "category": "référence transmetteur",
+      "manufacturer": "HYDAC",
+      "transcriptionHints": [
+        "HDA trois huit quatre zéro"
+      ]
+    },
+    {
+      "term": "KHP06",
+      "category": "référence vanne",
+      "manufacturer": "HYDAC",
+      "transcriptionHints": [
+        "KHP zéro six"
+      ]
+    },
+    {
+      "term": "VC125",
+      "category": "référence débitmètre",
+      "manufacturer": "Kracht",
+      "transcriptionHints": [
+        "VC cent vingt-cinq"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "term": "C45",
+      "category": "acier",
+      "transcriptionHints": [
+        "C quarante-cinq",
+        "C45"
+      ]
+    },
+    {
+      "term": "S250PB",
+      "category": "acier",
+      "transcriptionHints": [
+        "S deux cent cinquante PB",
+        "S250PB"
+      ]
+    },
+    {
+      "term": "HYT60",
+      "category": "acier",
+      "transcriptionHints": [
+        "HYT soixante",
+        "H Y T 60"
+      ]
+    },
+    {
+      "term": "2017",
+      "category": "aluminium",
+      "transcriptionHints": [
+        "alu 2017",
+        "deux mille dix-sept"
+      ]
+    },
+    {
+      "term": "5083",
+      "category": "aluminium",
+      "transcriptionHints": [
+        "alu 5083",
+        "cinquante quatre vingt trois"
+      ]
+    },
+    {
+      "term": "7075",
+      "category": "aluminium",
+      "transcriptionHints": [
+        "alu 7075",
+        "soixante dix soixante quinze"
+      ]
+    }
+  ],
+  "surfaceTreatments": [
+    {
+      "term": "nickel chimique",
+      "category": "traitement surface",
+      "transcriptionHints": [
+        "nickel chimique"
+      ]
+    },
+    {
+      "term": "anodisation",
+      "category": "traitement surface",
+      "transcriptionHints": [
+        "anodisation",
+        "anodisé"
+      ]
+    },
+    {
+      "term": "phosphatation",
+      "category": "traitement surface",
+      "transcriptionHints": [
+        "phosphatation"
+      ]
+    }
+  ]
+}

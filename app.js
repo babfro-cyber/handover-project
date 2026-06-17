@@ -12,21 +12,480 @@
 
   const DEMO_VERSION = "cockpit-v9";
 
-  const SECTION_ORDER = [
-    "drilled-block-design",
-    "schematics-client-need",
-    "material-choices",
-    "pressure-safety",
-    "surface-treatments",
-    "hydraulic-components",
-    "leak-diagnosis",
-    "troubleshooting-order",
-    "machining-feasibility",
-    "frequent-errors",
-    "weak-signals",
-    "customer-cases",
-    "experience-transfer",
+  const INTERVIEW_THEMES = [
+    {
+      "id": "bloc_fore_conception_numerhyd",
+      "title": "Bloc foré — conception et spécificité NumerHyd",
+      "objective": "Comprendre ce qui fait qu’un bloc foré est bien conçu, bien fabriqué, et ce qui distingue la manière NumerHyd de concevoir et produire ces blocs.",
+      "mainQuestion": "Quand vous regardez un bloc foré, comment savez-vous qu’il est bien conçu et bien fabriqué ?",
+      "followUps": [
+        "Qu’est-ce qui vous fait dire qu’un bloc est propre, fiable ou bien pensé ?",
+        "Qu’est-ce qui fait la spécificité des blocs NumerHyd par rapport à d’autres fabricants ?",
+        "Quels choix de conception ont le plus d’impact sur la performance ou la fiabilité du bloc ?",
+        "Quels signes vous alertent immédiatement quand vous voyez un plan ou un bloc physique ?",
+        "Pouvez-vous raconter un exemple de bloc bien conçu, et ce qui le rendait bon ?",
+        "Pouvez-vous raconter un exemple de bloc mal conçu, et ce qu’il aurait fallu faire autrement ?"
+      ],
+      "weakAnswerSignals": [
+        "Réponse générale du type « il faut que ce soit propre » sans expliquer pourquoi.",
+        "Pas d’exemple concret de bloc ou de client.",
+        "Pas de lien entre conception, fabrication, usinage et usage final.",
+        "Pas de mention des contraintes de pression, encombrement, composants ou maintenance."
+      ],
+      "goodAnswerCriteria": [
+        "Explique les critères concrets d’un bon bloc : circulation interne, accessibilité, compacité, tenue pression, usinabilité, maintenance.",
+        "Donne des exemples de décisions de conception.",
+        "Fait le lien entre schéma hydraulique, choix des composants, canaux internes et fabrication.",
+        "Distingue ce qui est théoriquement correct de ce qui fonctionne vraiment en atelier et chez le client.",
+        "Décrit ce qui est spécifique à NumerHyd."
+      ],
+      "realCasePrompts": [
+        "Racontez un bloc dont vous étiez particulièrement satisfait.",
+        "Racontez un bloc qui avait l’air simple mais qui était en réalité compliqué.",
+        "Racontez un cas où le client demandait quelque chose et où il a fallu adapter la conception."
+      ],
+      "avoid": [
+        "Ne pas rester sur une définition scolaire d’un bloc foré.",
+        "Ne pas transformer la réponse en catalogue de composants.",
+        "Ne pas parler uniquement du dessin 3D sans parler fabrication et usage."
+      ],
+      "expectedOutput": "Fiche métier : critères d’un bon bloc foré NumerHyd, réflexes de conception, signaux d’alerte et exemples concrets.",
+      "transversalRelanceTypes": [
+        "erreur_frequente",
+        "cas_client",
+        "critere_numerhyd",
+        "decision_metier"
+      ]
+    },
+    {
+      "id": "choix_materiaux",
+      "title": "Choix des matériaux",
+      "objective": "Capturer les règles de décision pour choisir entre acier, fonte, aluminium et nuances spécifiques selon pression, usinabilité, coût, disponibilité et usage final.",
+      "mainQuestion": "Quand vous devez choisir le matériau d’un bloc foré, comment raisonnez-vous ?",
+      "followUps": [
+        "Dans quels cas choisissez-vous l’acier, la fonte ou l’aluminium ?",
+        "Pourquoi choisir plutôt l’acier que la fonte ? Et dans quels cas la fonte reste pertinente ?",
+        "Comment arbitrez-vous entre C45, S250PB et HYT60 ?",
+        "Quels autres aciers peuvent être utilisés, et dans quels cas ?",
+        "Parmi les aluminiums 2017, 5083 et 7075, comment choisissez-vous ?",
+        "La pression de service change-t-elle votre choix de matière ? Si oui, comment ?",
+        "Qu’est-ce qui s’usine le mieux en pratique ? Et qu’est-ce qui pose problème ?",
+        "Quels matériaux évitez-vous, même s’ils semblent acceptables sur le papier ?"
+      ],
+      "weakAnswerSignals": [
+        "Liste de matériaux sans règles de choix.",
+        "Pas de seuil ou d’ordre de grandeur de pression.",
+        "Pas de lien avec l’usinage.",
+        "Pas de mention coût / délai / disponibilité.",
+        "Pas d’exemple d’arbitrage réel."
+      ],
+      "goodAnswerCriteria": [
+        "Explique une méthode de choix étape par étape.",
+        "Distingue pression, environnement, usinabilité, corrosion, poids, coût et disponibilité.",
+        "Donne des cas d’usage typiques par matière.",
+        "Mentionne les limites ou risques par matière.",
+        "Donne au moins un exemple client ou bloc réel."
+      ],
+      "realCasePrompts": [
+        "Racontez un cas où le choix de matière a changé pendant l’étude.",
+        "Racontez un cas où l’aluminium était tentant mais pas adapté.",
+        "Racontez un cas où le coût ou le délai matière a influencé la solution."
+      ],
+      "avoid": [
+        "Ne pas se contenter des propriétés théoriques des matériaux.",
+        "Ne pas inventer de valeurs précises si l’expert n’en donne pas.",
+        "Ne pas confondre usinabilité, tenue en pression et résistance à la corrosion."
+      ],
+      "expectedOutput": "Fiche de décision : choix matière pour blocs forés, avec règles pratiques, cas typiques et précautions.",
+      "transversalRelanceTypes": [
+        "ordre_grandeur",
+        "contre_exemple",
+        "cas_client",
+        "risque_securite"
+      ]
+    },
+    {
+      "id": "traitements_surface",
+      "title": "Traitements de surface",
+      "objective": "Comprendre quand appliquer un traitement de surface, lequel choisir, et quelles épaisseurs ou précautions sont importantes.",
+      "mainQuestion": "Quand vous concevez ou fabriquez un bloc foré, comment décidez-vous s’il faut un traitement de surface ?",
+      "followUps": [
+        "Dans quels cas utilisez-vous le nickel chimique ?",
+        "Dans quels cas utilisez-vous l’anodisation ? Quelle épaisseur recommandez-vous en pratique ?",
+        "Dans quels cas la phosphatation peut-elle être utile ?",
+        "Quels traitements évitez-vous sur certains matériaux ou certaines géométries ?",
+        "Quels risques un traitement peut-il créer sur les dimensions, cavités, portées ou filetages ?",
+        "Comment vérifiez-vous que le traitement ne gênera pas le montage des composants ?"
+      ],
+      "weakAnswerSignals": [
+        "Réponse limitée à une liste de traitements.",
+        "Pas de lien avec matériau, environnement ou fonction du bloc.",
+        "Pas de mention des impacts dimensionnels.",
+        "Pas d’exemple de problème lié à un traitement."
+      ],
+      "goodAnswerCriteria": [
+        "Explique le raisonnement entre corrosion, environnement, esthétique, frottement, montage et coût.",
+        "Mentionne les interactions avec cavités, taraudages, plans de pose et tolérances.",
+        "Donne des cas où il faut protéger ou masquer certaines zones.",
+        "Donne un exemple d’erreur ou de précaution sur traitement."
+      ],
+      "realCasePrompts": [
+        "Racontez un cas où un traitement a créé un problème au montage.",
+        "Racontez un cas où le traitement était imposé par le client.",
+        "Racontez un cas où vous avez refusé ou déconseillé un traitement."
+      ],
+      "avoid": [
+        "Ne pas transformer la fiche en cours général sur les traitements.",
+        "Ne pas donner d’épaisseur ferme si l’expert ne l’a pas validée.",
+        "Ne pas oublier l’impact sur les tolérances."
+      ],
+      "expectedOutput": "Fiche pratique : choix des traitements de surface, précautions et impacts sur fabrication / montage.",
+      "transversalRelanceTypes": [
+        "precaution_atelier",
+        "impact_dimensionnel",
+        "cas_client"
+      ]
+    },
+    {
+      "id": "analyse_dysfonctionnement_installation",
+      "title": "Analyse du dysfonctionnement d’une installation hydraulique avec bloc foré",
+      "objective": "Remplacer le thème trop étroit du diagnostic de fuite par une méthode complète d’analyse de panne sur une installation hydraulique intégrant un bloc foré.",
+      "mainQuestion": "Quand une installation hydraulique avec un bloc foré dysfonctionne, quelle méthode suivez-vous pour identifier la panne ?",
+      "followUps": [
+        "Par quelle vérification élémentaire commencez-vous toujours ?",
+        "Comment remontez-vous le diagnostic étape par étape ?",
+        "Comment distinguez-vous un problème de bloc, de composant, de réglage, de montage ou de circuit externe ?",
+        "Quels symptômes vous orientent vers une erreur de conception du bloc ?",
+        "Quels symptômes vous orientent plutôt vers un composant défectueux ou mal réglé ?",
+        "Quels contrôles faites-vous avant de conclure que le bloc est en cause ?",
+        "Quelles erreurs de diagnostic voyez-vous souvent chez les clients ou techniciens ?"
+      ],
+      "weakAnswerSignals": [
+        "Réponse non séquencée.",
+        "Diagnostic direct sans vérifications de base.",
+        "Pas de distinction entre pression, débit, réglage, fuite interne, fuite externe, composant et bloc.",
+        "Pas d’exemple de panne réelle."
+      ],
+      "goodAnswerCriteria": [
+        "Donne une méthode étape par étape.",
+        "Commence par les vérifications simples avant les hypothèses complexes.",
+        "Explique comment utiliser pression, débit, bruit, échauffement, mouvement ou absence de mouvement comme indices.",
+        "Distingue causes probables et tests de confirmation.",
+        "Donne au moins un cas réel de panne."
+      ],
+      "realCasePrompts": [
+        "Racontez une panne où le client pensait que le bloc était fautif mais ce n’était pas le cas.",
+        "Racontez une panne difficile à diagnostiquer.",
+        "Racontez un cas où la méthode de diagnostic a évité de refaire un bloc inutilement."
+      ],
+      "avoid": [
+        "Ne pas réduire le sujet à la fuite.",
+        "Ne pas sauter directement à une conclusion.",
+        "Ne pas produire une procédure trop théorique qui ignore les réflexes terrain."
+      ],
+      "expectedOutput": "Fiche méthode : diagnostic structuré d’un dysfonctionnement hydraulique autour d’un bloc foré.",
+      "transversalRelanceTypes": [
+        "methode_etape_par_etape",
+        "test_confirmation",
+        "erreur_frequente",
+        "cas_client"
+      ]
+    },
+    {
+      "id": "usinabilite_contraintes_atelier",
+      "title": "Usinabilité et contraintes atelier",
+      "objective": "Capturer les règles concrètes qui permettent de savoir si un bloc conçu est réellement usinable, au-delà de la modélisation théorique.",
+      "mainQuestion": "Quand vous concevez un bloc foré, comment vérifiez-vous qu’il sera réellement usinable ?",
+      "followUps": [
+        "Quels problèmes apparaissent souvent entre la conception 3D et l’usinage réel ?",
+        "Comment tenez-vous compte de la longueur des forets ?",
+        "Comment vérifiez-vous l’encombrement machine et l’accès aux faces ?",
+        "Quels trous inclinés ou perçages sur face posent problème ?",
+        "Comment décidez-vous de l’épaisseur minimum de matière entre deux orifices ou canaux ?",
+        "Quelles formes de cavités sont difficiles ou risquées à usiner ?",
+        "Quels détails rendent un bloc impossible, cher ou risqué à fabriquer ?"
+      ],
+      "weakAnswerSignals": [
+        "Réponse limitée à « vérifier le plan ».",
+        "Pas de mention des contraintes machine.",
+        "Pas de mention de longueur de foret, accès, inclinaisons ou épaisseurs.",
+        "Pas de distinction entre possible en CAO et réalisable en atelier.",
+        "Pas d’exemple concret."
+      ],
+      "goodAnswerCriteria": [
+        "Liste les contraintes atelier principales.",
+        "Explique comment vérifier chaque contrainte.",
+        "Donne des règles pratiques ou ordres de grandeur lorsque possible.",
+        "Décrit un cas où la conception a dû être modifiée pour usinage.",
+        "Explique comment anticiper plutôt que corriger après coup."
+      ],
+      "realCasePrompts": [
+        "Racontez un bloc qui semblait bon en 3D mais posait problème en atelier.",
+        "Racontez un cas de perçage trop long, trop incliné ou inaccessible.",
+        "Racontez un cas où une cavité ou un composant a forcé à repenser tout le bloc."
+      ],
+      "avoid": [
+        "Ne pas rester sur la théorie CAO.",
+        "Ne pas faire une liste vague de contraintes.",
+        "Ne pas oublier l’impact coût / délai / risque rebut."
+      ],
+      "expectedOutput": "Fiche atelier : règles d’usinabilité des blocs forés NumerHyd, contrôles à faire et erreurs à éviter.",
+      "transversalRelanceTypes": [
+        "contrainte_machine",
+        "ordre_grandeur",
+        "cas_rebut",
+        "cout_delai"
+      ]
+    },
+    {
+      "id": "schema_hydraulique_modelisation",
+      "title": "Schéma hydraulique et modélisation",
+      "objective": "Comprendre comment lire le schéma hydraulique, identifier les points de vigilance, choisir et placer les composants, puis dimensionner le bloc.",
+      "mainQuestion": "Quand vous partez d’un schéma hydraulique pour concevoir un bloc foré, dans quel ordre procédez-vous ?",
+      "followUps": [
+        "Quels sont les premiers points de vigilance sur le schéma hydraulique ?",
+        "Comment identifiez-vous les fonctions principales du bloc ?",
+        "Quelles cavités ou composants reviennent régulièrement ?",
+        "Quels composants sont piégeux ou demandent une attention particulière ?",
+        "Comment dimensionnez-vous le bloc en fonction des composants ?",
+        "Commencez-vous par le plus grand composant ? Si oui, dans quels cas ?",
+        "Comment décidez-vous sur quelle face placer chaque composant ?",
+        "Comment arbitrez-vous entre compacité, lisibilité, usinabilité et maintenance ?"
+      ],
+      "weakAnswerSignals": [
+        "Réponse non séquencée.",
+        "Pas de méthode de lecture du schéma.",
+        "Pas de mention du placement des composants.",
+        "Pas de mention des cavités, plans de pose ou contraintes internes.",
+        "Pas d’exemple de composant piège."
+      ],
+      "goodAnswerCriteria": [
+        "Explique une méthode claire de passage schéma → bloc.",
+        "Identifie les points de vigilance sur composants et fonctions.",
+        "Explique l’ordre de placement et les arbitrages.",
+        "Mentionne les standards utiles : CETOP, cavités SUN, brides, BSP/NPT, P/T/A/B lorsque pertinent.",
+        "Donne un cas concret de modélisation ou de placement difficile."
+      ],
+      "realCasePrompts": [
+        "Racontez un schéma hydraulique qui paraissait simple mais qui a créé un bloc compliqué.",
+        "Racontez un cas où un composant a dicté toute l’architecture du bloc.",
+        "Racontez un cas où le placement sur une face a posé problème."
+      ],
+      "avoid": [
+        "Ne pas transformer la réponse en cours général d’hydraulique.",
+        "Ne pas lister les composants sans expliquer leur impact sur la conception.",
+        "Ne pas oublier la maintenance et l’accès aux réglages."
+      ],
+      "expectedOutput": "Fiche méthode : passage du schéma hydraulique à la modélisation d’un bloc foré.",
+      "transversalRelanceTypes": [
+        "ordre_de_conception",
+        "composant_piege",
+        "arbitrage",
+        "cas_client"
+      ]
+    },
+    {
+      "id": "dimensionnement_securite_duree_vie",
+      "title": "Dimensionnement, sécurité et durée de vie",
+      "objective": "Extraire les règles de dimensionnement liées aux épaisseurs de paroi, pression, sécurité, fatigue, durée de vie et normes éventuelles.",
+      "mainQuestion": "Comment définissez-vous les épaisseurs et les marges de sécurité pour qu’un bloc foré dure dans le temps ?",
+      "followUps": [
+        "Comment décidez-vous de l’épaisseur de paroi entre deux canaux internes ?",
+        "Comment la matière, la pression et la taille des composants changent-elles vos marges ?",
+        "Quels risques de sécurité cherchez-vous à éviter en priorité ?",
+        "Y a-t-il des normes, standards ou règles internes à respecter ?",
+        "Comment estimez-vous la durée de vie d’un bloc ?",
+        "Quels signes montrent qu’un bloc risque de mal vieillir ?",
+        "Dans quels cas ajoutez-vous une marge par prudence ?"
+      ],
+      "weakAnswerSignals": [
+        "Réponse vague sur la sécurité.",
+        "Pas de lien entre pression, matière, géométrie et épaisseur.",
+        "Pas de méthode de vérification.",
+        "Pas de mention des normes ou règles internes.",
+        "Pas d’exemple réel."
+      ],
+      "goodAnswerCriteria": [
+        "Explique les facteurs qui influencent les marges.",
+        "Distingue règles calculées, expérience terrain et prudence métier.",
+        "Mentionne les cas à risque : forte pression, canaux proches, gros composants, perçages croisés, traitement, fatigue.",
+        "Donne des ordres de grandeur si l’expert les connaît.",
+        "Signale clairement ce qui doit être vérifié par calcul ou norme."
+      ],
+      "realCasePrompts": [
+        "Racontez un cas où vous avez volontairement épaissi ou agrandi un bloc pour sécurité.",
+        "Racontez un cas où une contrainte de pression a changé la conception.",
+        "Racontez un cas où une règle empirique vous a évité un risque."
+      ],
+      "avoid": [
+        "Ne pas inventer une norme ou une valeur si elle n’est pas donnée.",
+        "Ne pas masquer les incertitudes.",
+        "Ne pas confondre durée de vie théorique et retour d’expérience."
+      ],
+      "expectedOutput": "Fiche sécurité : règles de dimensionnement, marges, risques et points à valider.",
+      "transversalRelanceTypes": [
+        "risque_securite",
+        "ordre_grandeur",
+        "norme",
+        "retour_experience"
+      ]
+    },
+    {
+      "id": "ordre_verifications_controle_qualite",
+      "title": "Ordre des vérifications et contrôle qualité",
+      "objective": "Formaliser le regard extérieur à poser sur un bloc : vérifications de conception, usinabilité, cohérence hydraulique, fabrication et erreurs fréquentes.",
+      "mainQuestion": "Avant de valider un bloc foré, quelles vérifications faites-vous, et dans quel ordre ?",
+      "followUps": [
+        "Quelle est votre checklist mentale avant validation ?",
+        "Que vérifiez-vous sur le schéma hydraulique ?",
+        "Que vérifiez-vous sur le modèle ou le plan du bloc ?",
+        "Que vérifiez-vous pour confirmer que le bloc est usinable ?",
+        "Quel regard extérieur faut-il poser avant lancement ?",
+        "Quelles erreurs fréquentes retrouvez-vous dans les conceptions ?",
+        "Quels détails semblent mineurs mais peuvent créer un gros problème ?"
+      ],
+      "weakAnswerSignals": [
+        "Réponse non ordonnée.",
+        "Pas de checklist claire.",
+        "Pas de distinction entre contrôle hydraulique, contrôle usinage et contrôle montage.",
+        "Pas d’exemples d’erreurs fréquentes.",
+        "Pas de méthode de double-check."
+      ],
+      "goodAnswerCriteria": [
+        "Décrit un ordre logique de vérification.",
+        "Sépare les contrôles : schéma, composants, canaux, usinage, plans de pose, raccordements, sécurité, montage.",
+        "Explique les erreurs fréquentes et comment les détecter.",
+        "Mentionne le rôle du regard extérieur ou de la revue par une autre personne.",
+        "Donne une checklist exploitable."
+      ],
+      "realCasePrompts": [
+        "Racontez une erreur détectée juste avant fabrication.",
+        "Racontez une erreur passée malgré les contrôles.",
+        "Racontez ce qu’un jeune concepteur oublie souvent de vérifier."
+      ],
+      "avoid": [
+        "Ne pas créer une checklist trop abstraite.",
+        "Ne pas lister uniquement les erreurs sans expliquer comment les éviter.",
+        "Ne pas oublier la logique de revue par un tiers."
+      ],
+      "expectedOutput": "Checklist de validation d’un bloc foré avant fabrication.",
+      "transversalRelanceTypes": [
+        "checklist",
+        "erreur_frequente",
+        "revue_pair",
+        "controle_final"
+      ]
+    },
+    {
+      "id": "pilotage_entreprise_signaux_faibles",
+      "title": "Pilotage de l’entreprise et signaux faibles",
+      "objective": "Capturer les signaux faibles utilisés pour piloter NumerHyd : stock, commandes, non-conformités, investissement, marché, clients et informations terrain.",
+      "mainQuestion": "Quels signaux faibles regardez-vous pour savoir comment se porte l’entreprise ?",
+      "followUps": [
+        "Quels indicateurs regardez-vous régulièrement : stock, commandes, devis, délais, non-conformités, trésorerie, atelier ?",
+        "Qu’est-ce qui vous alerte avant qu’un problème devienne visible dans les chiffres ?",
+        "Comment décidez-vous qu’il faut investir ?",
+        "Comment sentez-vous le marché ?",
+        "Quelles informations terrain ou client sont les plus utiles ?",
+        "Comment récoltez-vous ces informations ?",
+        "Qu’est-ce qu’un repreneur ou successeur risque de ne pas voir au début ?"
+      ],
+      "weakAnswerSignals": [
+        "Réponse uniquement financière.",
+        "Pas de signaux faibles concrets.",
+        "Pas de lien avec clients, atelier, fournisseurs ou marché.",
+        "Pas d’exemple de décision d’investissement.",
+        "Pas de mention de transmission au successeur."
+      ],
+      "goodAnswerCriteria": [
+        "Identifie des signaux concrets et observables.",
+        "Explique comment ces signaux influencent les décisions.",
+        "Donne des exemples de décisions prises grâce à ces signaux.",
+        "Fait le lien entre activité commerciale, atelier, qualité, stock et marché.",
+        "Explique ce qu’un nouveau dirigeant doit apprendre à surveiller."
+      ],
+      "realCasePrompts": [
+        "Racontez un moment où un signal faible vous a fait anticiper un problème.",
+        "Racontez un investissement décidé grâce à une observation terrain.",
+        "Racontez un changement de marché que vous avez senti avant les autres."
+      ],
+      "avoid": [
+        "Ne pas limiter le sujet à un dashboard KPI.",
+        "Ne pas chercher une précision financière excessive si ce n’est pas l’objet.",
+        "Ne pas oublier le côté intuition / expérience dirigeant."
+      ],
+      "expectedOutput": "Fiche de pilotage : signaux faibles, réflexes de décision et points de vigilance pour la reprise.",
+      "transversalRelanceTypes": [
+        "decision_dirigeant",
+        "intuition_marche",
+        "signal_faible",
+        "exemple_investissement"
+      ]
+    },
+    {
+      "id": "transmission_finale",
+      "title": "Transmission finale",
+      "objective": "Laisser l’expert ajouter ce qui n’a pas été couvert, notamment l’expertise difficile à formaliser, les conseils au successeur et les sujets à creuser.",
+      "mainQuestion": "Qu’est-ce qui vous paraît important de transmettre et dont on n’a pas encore parlé ?",
+      "followUps": [
+        "Quelle expertise est la plus difficile à mettre sur papier ?",
+        "Qu’est-ce qu’un successeur risque de sous-estimer ?",
+        "Quels réflexes avez-vous acquis avec l’expérience mais que vous n’avez jamais vraiment formalisés ?",
+        "Quels sujets faudrait-il absolument creuser dans un deuxième entretien ?",
+        "Quels conseils donneriez-vous à quelqu’un qui reprend votre rôle ?",
+        "Y a-t-il une erreur importante que vous voulez aider le successeur à éviter ?"
+      ],
+      "weakAnswerSignals": [
+        "Réponse très courte ou polie sans contenu concret.",
+        "Pas de conseil actionnable.",
+        "Pas de sujet de suivi.",
+        "Pas de mise en garde ou de priorité."
+      ],
+      "goodAnswerCriteria": [
+        "Fait ressortir des conseils pratiques.",
+        "Identifie des zones d’expertise tacite.",
+        "Priorise les sujets à approfondir.",
+        "Mentionne ce qui n’est pas documenté ailleurs.",
+        "Donne une transmission humaine, pas seulement technique."
+      ],
+      "realCasePrompts": [
+        "Racontez une chose que vous avez apprise tard et que vous auriez aimé savoir plus tôt.",
+        "Racontez une erreur qui vous a marqué.",
+        "Racontez une situation où l’expérience compte plus que la procédure."
+      ],
+      "avoid": [
+        "Ne pas finir trop vite.",
+        "Ne pas se contenter d’un remerciement.",
+        "Ne pas transformer ce thème en bilan RH."
+      ],
+      "expectedOutput": "Fiche finale : savoirs tacites, conseils au successeur, sujets à compléter et prochaines interviews à prévoir.",
+      "transversalRelanceTypes": [
+        "savoir_tacite",
+        "conseil_successeur",
+        "priorite_suivi"
+      ]
+    }
   ];
+
+  const INTERVIEW_THEME_BY_ID = Object.fromEntries(INTERVIEW_THEMES.map((theme) => [theme.id, theme]));
+
+  const LEGACY_THEME_ID_MAP = {
+    "drilled-block-design": "bloc_fore_conception_numerhyd",
+    "schematics-client-need": "schema_hydraulique_modelisation",
+    "material-choices": "choix_materiaux",
+    "pressure-safety": "dimensionnement_securite_duree_vie",
+    "surface-treatments": "traitements_surface",
+    "hydraulic-components": "schema_hydraulique_modelisation",
+    "leak-diagnosis": "analyse_dysfonctionnement_installation",
+    "troubleshooting-order": "ordre_verifications_controle_qualite",
+    "machining-feasibility": "usinabilite_contraintes_atelier",
+    "frequent-errors": "transmission_finale",
+    "weak-signals": "pilotage_entreprise_signaux_faibles",
+    "customer-cases": "pilotage_entreprise_signaux_faibles",
+    "experience-transfer": "transmission_finale"
+  };
+
+  const SECTION_ORDER = INTERVIEW_THEMES.map((theme) => theme.id);
 
   const routeLabels = {
     home: "#/",
@@ -150,6 +609,12 @@
       uploadingAudio: "Sauvegarde de l’audio…",
       transcribingAudio: "Transcription en cours…",
       transcriptReady: "Transcription prête. Relisez et corrigez si besoin avant de valider.",
+      correctedTranscriptReady: "Transcription corrigée avec le glossaire. Le brut reste visible pour vérification.",
+      rawTranscriptLabel: "Transcription brute",
+      correctedTranscriptLabel: "Transcription corrigée",
+      glossaryCorrectionsLabel: "Corrections proposées",
+      uncertainCorrectionsLabel: "Corrections incertaines",
+      detectedTermsLabel: "Termes détectés",
       transcriptionFailed: "La transcription a échoué, mais l’audio est sauvegardé. Vous pouvez continuer par écrit.",
       recordingUnsupported: "L’enregistrement audio n’est pas disponible dans ce navigateur. Vous pouvez continuer par écrit.",
       analyzingAnswer: "Analyse de la réponse…",
@@ -161,6 +626,9 @@
       questionAudioFailed: "La lecture audio n’a pas pu démarrer. La question écrite reste disponible.",
       generateFiches: "Générer les fiches",
       regenerateFiches: "Regénérer les fiches",
+      generateFichesV2: "Générer la synthèse et les fiches techniques",
+      generateFichesHelp:
+        "L’outil va transformer les réponses validées en fiches métier exploitables. Les réponses brutes resteront visibles pour vérification.",
       generatingFiches: "Génération en cours…",
       retryGenerateFiches: "Réessayer",
       ficheGenerationLoading: "Génération des fiches techniques en cours…",
@@ -441,7 +909,7 @@
     finishConfirmationSessionId: null,
     createdSessionId: null,
     selectedDashboardSessionId: null,
-    activeThemeId: "drilled-block-design",
+    activeThemeId: SECTION_ORDER[0],
     lastRouteKey: "",
     speech: {
       supported: false,
@@ -462,6 +930,11 @@
       error: "",
       transcriptBase: "",
       lastAudioAssetId: "",
+      rawTranscriptText: "",
+      correctedTranscriptText: "",
+      correctionsApplied: [],
+      uncertainCorrections: [],
+      detectedTechnicalTerms: [],
     },
     currentDocId: null,
     showDemoNotice: false,
@@ -825,8 +1298,11 @@
   }
 
   function getSectionTitle(sectionId) {
+    const normalizedId = normalizeThemeId(sectionId);
+    const theme = INTERVIEW_THEME_BY_ID[normalizedId];
+    if (theme?.title) return theme.title;
     const copy = dictionary();
-    switch (sectionId) {
+    switch (normalizedId) {
       case "drilled-block-design":
         return copy.sectionDrilledBlock;
       case "schematics-client-need":
@@ -854,15 +1330,21 @@
       case "experience-transfer":
         return copy.sectionTransfer;
       default:
-        return sectionId;
+        return normalizedId;
     }
+  }
+
+  function normalizeThemeId(themeId) {
+    const clean = String(themeId || "").trim();
+    return LEGACY_THEME_ID_MAP[clean] || clean;
   }
 
   function normalizeThemeIds(themeIds) {
     const clean = Array.isArray(themeIds)
-      ? themeIds.filter((id) => SECTION_ORDER.includes(id))
+      ? themeIds.map(normalizeThemeId).filter((id) => SECTION_ORDER.includes(id))
       : [];
-    return clean.length ? clean : [...SECTION_ORDER];
+    const unique = clean.filter((id, index, list) => list.indexOf(id) === index);
+    return unique.length ? unique : [...SECTION_ORDER];
   }
 
   function getSessionThemeIds(session) {
@@ -884,8 +1366,11 @@
   }
 
   function getSectionQuestion(sectionId) {
+    const normalizedId = normalizeThemeId(sectionId);
+    const theme = INTERVIEW_THEME_BY_ID[normalizedId];
+    if (theme?.mainQuestion) return theme.mainQuestion;
     const copy = dictionary();
-    switch (sectionId) {
+    switch (normalizedId) {
       case "drilled-block-design":
         return copy.qDrilledBlock;
       case "schematics-client-need":
@@ -1064,11 +1549,15 @@
     themeIds.forEach((sectionId, index) => {
       const time = now - (offsetMinutes - index * 6) * 60000;
       messages.push(assistantMsg("fr", sectionId, getSectionQuestion(sectionId), time));
-      if (answers[sectionId]) {
-        messages.push(userMsg(answers[sectionId], sectionId, time + 2 * 60000));
+      const legacyAnswerEntry = Object.entries(LEGACY_THEME_ID_MAP).find(
+        ([legacyId, mappedId]) => mappedId === sectionId && answers[legacyId],
+      );
+      const answerText = answers[sectionId] || (legacyAnswerEntry ? answers[legacyAnswerEntry[0]] : "");
+      if (answerText) {
+        messages.push(userMsg(answerText, sectionId, time + 2 * 60000));
       }
     });
-    const answeredIds = Object.keys(answers).filter((id) => themeIds.includes(id));
+    const answeredIds = Object.keys(answers).map(normalizeThemeId).filter((id) => themeIds.includes(id));
     const lastAnsweredId = answeredIds[answeredIds.length - 1] || themeIds[0];
     const nextTheme = themeIds.find((id) => !answeredIds.includes(id)) || lastAnsweredId;
     const updatedAt = new Date(now - Math.max(4, offsetMinutes - answeredIds.length * 6) * 60000).toISOString();
@@ -1191,6 +1680,19 @@
       let nextSession = session.token ? session : { ...session, token: createToken() };
       if (!session.token) {
         changed = true;
+      }
+
+      const mappedCurrentSectionId = normalizeThemeId(nextSession.currentSectionId);
+      if (mappedCurrentSectionId !== nextSession.currentSectionId) {
+        changed = true;
+        nextSession = {
+          ...nextSession,
+          currentSectionId: mappedCurrentSectionId,
+          messages: (nextSession.messages || []).map((message) => ({
+            ...message,
+            sectionId: normalizeThemeId(message.sectionId),
+          })),
+        };
       }
 
       if (!SECTION_ORDER.includes(nextSession.currentSectionId)) {
@@ -1508,9 +2010,15 @@
 
     const interview = payload.interview;
     const plan = payload.plan || {};
-    const answers = Array.isArray(payload.answers) ? payload.answers : [];
-    const decisions = Array.isArray(payload.ai_decisions) ? payload.ai_decisions : [];
-    const fiches = Array.isArray(payload.fiches) ? payload.fiches : [];
+    const answers = Array.isArray(payload.answers)
+      ? payload.answers.map((answer) => ({ ...answer, theme_id: normalizeThemeId(answer.theme_id) }))
+      : [];
+    const decisions = Array.isArray(payload.ai_decisions)
+      ? payload.ai_decisions.map((decision) => ({ ...decision, theme_id: normalizeThemeId(decision.theme_id) }))
+      : [];
+    const fiches = Array.isArray(payload.fiches)
+      ? payload.fiches.map((fiche) => ({ ...fiche, theme_id: normalizeThemeId(fiche.theme_id) }))
+      : [];
     const themeIds = normalizeThemeIds(
       Array.isArray(interview.selected_theme_ids)
         ? interview.selected_theme_ids
@@ -1696,6 +2204,46 @@
     );
   }
 
+  function evaluateAnswerQuality(themeId, answerText) {
+    const theme = INTERVIEW_THEME_BY_ID[normalizeThemeId(themeId)] || {};
+    const normalized = String(answerText || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+    const weakSignals = Array.isArray(theme.weakAnswerSignals) ? theme.weakAnswerSignals : [];
+    const goodCriteria = Array.isArray(theme.goodAnswerCriteria) ? theme.goodAnswerCriteria : [];
+    const weakScore =
+      (wordCount < 28 ? 2 : wordCount < 70 ? 1 : 0) +
+      (/\b(je ne sais pas|je sais pas|ca depend|ça depend|pas d exemple|pas precis|pas sûr|pas sur)\b/.test(normalized) ? 2 : 0);
+    const goodScore =
+      (/\b(exemple|cas|client|atelier|machine|bloc)\b/.test(normalized) ? 1 : 0) +
+      (/\b(d'abord|d abord|ensuite|puis|avant|apres|après|regle|règle|choix|arbitr|verifi|contr)\b/.test(normalized) ? 1 : 0) +
+      (/\b(pression|debit|débit|usinage|matiere|matière|traitement|cavite|cavité|schema|schéma|securite|sécurité)\b/.test(normalized) ? 1 : 0);
+
+    if (weakScore >= 2 || goodScore === 0) {
+      return {
+        label: "faible",
+        weakSignals,
+        goodCriteriaMissing: goodCriteria,
+      };
+    }
+
+    if (goodScore < 3 || wordCount < 120) {
+      return {
+        label: "partielle",
+        weakSignals,
+        goodCriteriaMissing: goodCriteria.slice(goodScore),
+      };
+    }
+
+    return {
+      label: "exploitable",
+      weakSignals: [],
+      goodCriteriaMatched: goodCriteria,
+    };
+  }
+
   async function createRemoteInterview({ expertName, profile, selectedThemeIds }) {
     const config = getBackendConfig();
     const managerToken = config.managerToken || createToken();
@@ -1706,7 +2254,7 @@
       p_expert_name: expertName,
       p_profile: profile,
       p_selected_theme_ids: selectedThemeIds,
-      p_plan_slug: "numerhyd-v1",
+      p_plan_slug: "numerhyd-v2",
     });
     rememberManagerToken(managerToken);
     const session = convertSupabaseRowsToCurrentSessionShape(payload);
@@ -1731,14 +2279,32 @@
           status: "in_progress",
         };
     const questionText = options.questionText || getSectionQuestion(session.currentSectionId);
-    const payload = await callSupabaseRpc("submit_text_answer", {
+    const baseParams = {
       p_public_token: session.token,
       p_theme_id: session.currentSectionId,
       p_question_text: questionText,
       p_answer_text: answerText,
       p_next_theme_id: next.nextThemeId,
       p_status: next.status,
-    });
+    };
+    const metadataParams = {
+      ...baseParams,
+      p_raw_transcript: options.rawTranscript || answerText,
+      p_corrected_transcript: options.correctedTranscript || answerText,
+      p_corrections_applied: options.correctionsApplied || [],
+      p_uncertain_corrections: options.uncertainCorrections || [],
+      p_detected_technical_terms: options.detectedTechnicalTerms || [],
+      p_answer_quality: options.answerQuality || evaluateAnswerQuality(session.currentSectionId, answerText),
+    };
+    let payload = null;
+    try {
+      payload = await callSupabaseRpc("submit_text_answer", metadataParams);
+    } catch (error) {
+      if (!/p_raw_transcript|p_corrected_transcript|corrections|answer_quality|function/i.test(error?.message || "")) {
+        throw error;
+      }
+      payload = await callSupabaseRpc("submit_text_answer", baseParams);
+    }
     const nextSession = convertSupabaseRowsToCurrentSessionShape(payload);
     appState.backend.managerError = "";
     return upsertSessionInMemory(nextSession);
@@ -1779,11 +2345,15 @@
     }
 
     const selectedThemes = getSessionThemeIds(session);
-    const plan = selectedThemes.map((themeId) => ({
-      id: themeId,
-      title: getSectionTitle(themeId),
-      question: getSectionQuestion(themeId),
-    }));
+    const plan = selectedThemes.map((themeId) => {
+      const theme = INTERVIEW_THEME_BY_ID[themeId] || {};
+      return {
+        ...theme,
+        id: themeId,
+        title: theme.title || getSectionTitle(themeId),
+        question: theme.mainQuestion || getSectionQuestion(themeId),
+      };
+    });
 
     const response = await fetch(endpoint, {
       method: "POST",
@@ -2115,9 +2685,12 @@
   function buildFollowUp(text, sectionId) {
     const copy = dictionary();
     const analysis = analyzeText(text);
+    const theme = INTERVIEW_THEME_BY_ID[normalizeThemeId(sectionId)];
+    const configuredFollowUps = Array.isArray(theme?.followUps) ? theme.followUps : [];
+    const realCasePrompts = Array.isArray(theme?.realCasePrompts) ? theme.realCasePrompts : [];
 
     if (analysis.wordCount < 20) {
-      return copy.followShort;
+      return configuredFollowUps[0] || copy.followShort;
     }
 
     if (sectionId === "frequent-errors") {
@@ -2145,7 +2718,7 @@
     }
 
     if (!analysis.hasExample) {
-      return copy.followAbstract;
+      return realCasePrompts[0] || configuredFollowUps[0] || copy.followAbstract;
     }
 
     return null;
@@ -2607,6 +3180,11 @@
     appState.audio.durationMs = 0;
     appState.audio.startedAt = null;
     appState.audio.lastAudioAssetId = "";
+    appState.audio.rawTranscriptText = "";
+    appState.audio.correctedTranscriptText = "";
+    appState.audio.correctionsApplied = [];
+    appState.audio.uncertainCorrections = [];
+    appState.audio.detectedTechnicalTerms = [];
   }
 
   function getQuestionAudioKey(session, questionText) {
@@ -2938,11 +3516,17 @@
         throw new Error(message);
       }
 
-      const transcript = String(payload?.transcript_text || "").trim();
+      const rawTranscript = String(payload?.raw_transcript_text || payload?.transcript_text || "").trim();
+      const correctedTranscript = String(payload?.corrected_transcript_text || payload?.transcript_text || rawTranscript).trim();
       appState.audio.status = "ready";
       appState.audio.lastAudioAssetId = payload?.audio_asset_id || "";
-      if (transcript) {
-        applyTranscriptToDraft(session, transcript);
+      appState.audio.rawTranscriptText = rawTranscript;
+      appState.audio.correctedTranscriptText = correctedTranscript;
+      appState.audio.correctionsApplied = Array.isArray(payload?.corrections_applied) ? payload.corrections_applied : [];
+      appState.audio.uncertainCorrections = Array.isArray(payload?.uncertain_corrections) ? payload.uncertain_corrections : [];
+      appState.audio.detectedTechnicalTerms = Array.isArray(payload?.detected_technical_terms) ? payload.detected_technical_terms : [];
+      if (correctedTranscript || rawTranscript) {
+        applyTranscriptToDraft(session, correctedTranscript || rawTranscript);
       }
       render();
     } catch (error) {
@@ -3501,6 +4085,7 @@
                 ? `<p class="transcript-review-note">${escapeHtml(copy.transcriptReady)}</p>`
                 : ""
             }
+            ${isRemoteAudioSession(session) && appState.audio.status === "ready" ? renderTranscriptCorrectionReview() : ""}
             <p class="helper-note">${copy.submitHint}</p>
             ${
               session.source === "supabase" && appState.backend.aiDecisionLoading
@@ -3565,6 +4150,11 @@
 
   function getThemePreview(session, themeId) {
     const generated = getGeneratedFicheContent(session, themeId);
+    const practicalPreview = Array.isArray(generated?.understanding) ? generated.understanding.find(Boolean) : "";
+    if (practicalPreview) {
+      const summary = compactSentence(practicalPreview);
+      return summary.length > 132 ? `${summary.slice(0, 129)}...` : summary;
+    }
     if (generated?.summary) {
       const summary = compactSentence(generated.summary);
       return summary.length > 132 ? `${summary.slice(0, 129)}...` : summary;
@@ -3581,6 +4171,54 @@
         <summary>Voir la réponse complète</summary>
         <p>${escapeHtml(answer)}</p>
       </details>
+    `;
+  }
+
+  function renderCorrectionItems(items) {
+    if (!Array.isArray(items) || !items.length) return "";
+    return `<ul class="correction-list">${items
+      .map((item) => {
+        if (typeof item === "string") return `<li>${escapeHtml(item)}</li>`;
+        const from = item?.from || item?.original || item?.before || "";
+        const to = item?.to || item?.corrected || item?.after || "";
+        const reason = item?.reason || item?.confidence || "";
+        const label = from || to ? `${from}${from && to ? " → " : ""}${to}` : JSON.stringify(item);
+        return `<li>${escapeHtml(label)}${reason ? ` <span>${escapeHtml(reason)}</span>` : ""}</li>`;
+      })
+      .join("")}</ul>`;
+  }
+
+  function renderTranscriptCorrectionReview() {
+    const copy = dictionary();
+    const raw = appState.audio.rawTranscriptText;
+    const corrected = appState.audio.correctedTranscriptText;
+    const corrections = appState.audio.correctionsApplied;
+    const uncertain = appState.audio.uncertainCorrections;
+    const terms = appState.audio.detectedTechnicalTerms;
+    if (!raw && !corrected && !corrections.length && !uncertain.length && !terms.length) return "";
+
+    return `
+      <div class="correction-review">
+        <p class="transcript-review-note">${escapeHtml(copy.correctedTranscriptReady)}</p>
+        ${
+          raw
+            ? `<details>
+                <summary>${escapeHtml(copy.rawTranscriptLabel)}</summary>
+                <p>${escapeHtml(raw)}</p>
+              </details>`
+            : ""
+        }
+        ${
+          corrections.length || uncertain.length || terms.length
+            ? `<details>
+                <summary>Détails des corrections</summary>
+                ${corrections.length ? `<div><p class="doc-key">${escapeHtml(copy.glossaryCorrectionsLabel)}</p>${renderCorrectionItems(corrections)}</div>` : ""}
+                ${uncertain.length ? `<div><p class="doc-key">${escapeHtml(copy.uncertainCorrectionsLabel)}</p>${renderCorrectionItems(uncertain)}</div>` : ""}
+                ${terms.length ? `<div><p class="doc-key">${escapeHtml(copy.detectedTermsLabel)}</p>${renderCorrectionItems(terms)}</div>` : ""}
+              </details>`
+            : ""
+        }
+      </div>
     `;
   }
 
@@ -3666,16 +4304,20 @@
             generated
               ? `
                 <div class="document-field">
-                  <p class="doc-key">Résumé</p>
-                  <p class="doc-value">${escapeHtml(generated.summary || "À compléter.")}</p>
+                  <p class="doc-key">Niveau de confiance</p>
+                  <p class="doc-value">${escapeHtml(generated.status || status)}</p>
                 </div>
-                ${renderFicheSection("Connaissances capturées", generated.key_technical_points, "Aucune connaissance technique exploitable n’a été clairement capturée sur ce point.")}
-                ${renderFicheSection("Raisonnement / heuristiques", generated.reasoning_heuristics, "À compléter à partir d’un raisonnement plus précis.")}
-                ${renderFicheSection("Exemples ou cas clients", generated.examples_customer_cases, "Aucun exemple ou cas client précis n’a été capturé.")}
-                ${renderFicheSection("Risques / erreurs à éviter", generated.risks_mistakes_to_avoid, "Aucun risque ou erreur précise n’a été capturé.")}
-                ${renderFicheSection("Questions ouvertes / points à compléter", generated.open_questions_missing_points, "Aucun point à compléter prioritaire.")}
+                ${renderFicheSection("Ce qu’il faut comprendre", generated.understanding || generated.key_technical_points, "Aucune connaissance technique exploitable n’a été clairement capturée sur ce point.")}
+                ${renderFicheSection("Méthode ou raisonnement métier", generated.method_reasoning || generated.reasoning_heuristics, "À compléter à partir d’un raisonnement plus précis.")}
+                ${renderFicheSection("Règles pratiques à retenir", generated.practical_rules || generated.reasoning_heuristics, "Aucune règle pratique explicite n’a été capturée.")}
+                ${renderFicheSection("Points de vigilance", generated.vigilance_points || generated.risks_mistakes_to_avoid, "Aucun point de vigilance précis n’a été capturé.")}
+                ${renderFicheSection("Erreurs à éviter", generated.mistakes_to_avoid || generated.risks_mistakes_to_avoid, "Aucune erreur précise n’a été capturée.")}
+                ${renderFicheSection("Cas ou exemples racontés", generated.cases_or_examples || generated.examples_customer_cases, "Aucun exemple ou cas client précis n’a été capturé.")}
+                ${renderFicheSection("Vocabulaire technique associé", generated.technical_vocabulary, "Aucun terme technique associé n’a été détecté.")}
+                ${renderFicheSection("À compléter", generated.to_complete || generated.open_questions_missing_points, "Aucun point à compléter prioritaire.")}
+                ${renderFicheSection("Extraits bruts utiles", generated.useful_raw_extracts, "Consultez les réponses brutes ci-dessous.")}
                 <div class="document-field">
-                  <p class="doc-key">Réponse brute utilisée</p>
+                  <p class="doc-key">Réponses brutes / transcripts</p>
                   ${renderSimpleList(answers, "Aucune réponse brute disponible pour ce thème.")}
                 </div>
               `
@@ -3958,7 +4600,7 @@
         ? copy.regenerateFiches
         : generationError
           ? copy.retryGenerateFiches
-          : copy.generateFiches;
+          : copy.generateFichesV2;
     const ficheButtonDisabled = isGeneratingFiches || !isCompleted;
     const ficheStatusMessage = isGeneratingFiches
       ? copy.ficheGenerationLoading
@@ -4002,7 +4644,7 @@
         <section class="section-card synthesis-card">
           <p class="eyebrow">${copy.docTitle}</p>
           <h2 class="section-title" style="margin-top:12px;">Fiches techniques</h2>
-          <p class="helper-note" style="margin-top:8px;">Chaque fiche correspond à un thème abordé pendant l’entretien.</p>
+          <p class="helper-note" style="margin-top:8px;">${escapeHtml(copy.generateFichesHelp)}</p>
           ${
             session.source === "supabase" && backendAvailable()
               ? `<div class="synthesis-action-row">
@@ -4034,7 +4676,13 @@
   }
 
   function getInterviewHints(sectionId) {
-    switch (sectionId) {
+    const normalizedId = normalizeThemeId(sectionId);
+    const theme = INTERVIEW_THEME_BY_ID[normalizedId];
+    if (Array.isArray(theme?.followUps) && theme.followUps.length) {
+      return theme.followUps.slice(0, 2);
+    }
+
+    switch (normalizedId) {
       case "drilled-block-design":
         return ["Décrivez votre premier réflexe", "Mentionnez les contraintes qui changent tout"];
       case "schematics-client-need":
@@ -4378,6 +5026,17 @@
         answeringFollowUp && existingThemeAnswer
           ? `${existingThemeAnswer}\n\nSuivi : ${value}`
           : value;
+      const transcriptMetadata = {
+        rawTranscript:
+          answeringFollowUp && existingThemeAnswer && appState.audio.rawTranscriptText
+            ? `${existingThemeAnswer}\n\nSuivi brut : ${appState.audio.rawTranscriptText}`
+            : appState.audio.rawTranscriptText || value,
+        correctedTranscript: answerToSave,
+        correctionsApplied: appState.audio.correctionsApplied,
+        uncertainCorrections: appState.audio.uncertainCorrections,
+        detectedTechnicalTerms: appState.audio.detectedTechnicalTerms,
+        answerQuality: evaluateAnswerQuality(session.currentSectionId, answerToSave),
+      };
 
       try {
         appState.backend.aiDecisionLoading = true;
@@ -4389,6 +5048,7 @@
         const savedSession = await submitRemoteTextAnswer(session, answerToSave, {
           advance: false,
           questionText: fixedQuestionText,
+          ...transcriptMetadata,
         });
         let decision = null;
         try {
@@ -4411,6 +5071,7 @@
           nextSession = await submitRemoteTextAnswer(savedSession || session, answerToSave, {
             advance: true,
             questionText: fixedQuestionText,
+            ...transcriptMetadata,
           });
         }
 

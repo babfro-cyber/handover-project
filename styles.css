@@ -789,6 +789,37 @@ button {
   font-weight: 800;
 }
 
+.correction-review {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  background: rgba(248, 251, 250, 0.74);
+}
+
+.correction-review summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.correction-review p {
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.correction-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.correction-list li {
+  margin: 4px 0;
+}
+
+.correction-list span {
+  color: var(--muted);
+}
+
 .expert-textarea {
   min-height: 144px;
   padding: 14px 16px;
